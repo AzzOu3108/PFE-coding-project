@@ -3,27 +3,41 @@ version: "3.9"
 services:
   backend:
     build:
-      context: ./backend
+      context: ./backend  # Points to the backend folder for building the backend
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/usr/src/app
       - /usr/src/app/node_modules
     environment:
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true  
+      - NODE_ENV=${NODE_ENV}
+      - CHOKIDAR_USEPOLLING=true
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT}
+      - DB_DIALECT=${DB_DIALECT}
     command: nodemon server.js
     restart: always
+    depends_on:
+      - db
+    env_file:
+      - ./backend/.env  # Adjust this to point to the .env file in the backend folder
 
-  frontend:
-    build:
-      context: ./frontend
+  db:
+    image: mysql:latest
+    container_name: mysql_container
     ports:
-      - "3000:3000"               
+      - "3307:3306"
     volumes:
-      - ./frontend:/usr/src/app   
-      - /usr/src/app/node_modules 
+      - db_data:/var/lib/mysql
     environment:
-      - CHOKIDAR_USEPOLLING=true  
-    command: npm run dev
-    restart: always
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    
+
+volumes:
+  db_data:
