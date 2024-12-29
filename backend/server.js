@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express')
 const app = express()
-const sequelize = require('./config/dbconn')
+const sequelize = require('./config/DB')
 const path = require('path')
 const {logger} = require('./middleware/logger')
 const cors = require('cors')
