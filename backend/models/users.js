@@ -17,11 +17,11 @@ const utilisateur = sequelize.define('utilisateur', {
         allowNull: false
     },
     mot_de_passe: {
-        type: DataTypes.STRING(10),
+        type: DataTypes.STRING(255),
         allowNull: false
     },
     numero_telephone: {
-        type: DataTypes.STRING(15),
+        type: DataTypes.STRING(10),
         allowNull: false,
         validate: {
             is: /^\d{10}$/, // Validate it has exactly 10 digits
