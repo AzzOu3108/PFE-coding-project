@@ -67,15 +67,78 @@ const createNewUser = async(req, res) =>{
         console.log(error)
         res.status(500).json({ message: 'Erreur du serveur' });
     }
-}
+};
+
+const updateUserRole = async (req, res) =>{
+    const {id} = req.parames
+    const {role_id} = req.body
+
+    if(!role_id){
+        return res.status(400).json({message:"L'ID du rôle est requis"})
+    }
+
+    try {
+        const user = await utilisateur.findOne({ where: {utilisateur_id: id}})
+
+        if(!user){
+            return res.status(400).json({message: 'Utilisateur non trouvé'})
+        }
+        user.role_id = role_id
+        await user.save()
+        res.status(200).json({ message: 'Rôle mis à jour avec succès' });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Erreur du serveur' });
+    }
+};
 
 const updateUser = async (req, res) =>{
+    // use ID from the "auth middleware" here in middleware implementation
+    // const utilisateur_id = req.user.id;
+    const { utilisateur_id, nom_complet, adresse_email, mot_de_passe, numero_telephone, departement } = req.body;
+
+    if(!utilisateur_id){
+        return res.status(400).json({message: "Utilisateur ID est requis"})
+    }
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+    try {
+        const user = await utilisateur.findByPk(utilisateur_id);
+
+        if (nom_complet) user.nom_complet = nom_complet;
+        if (adresse_email) user.adresse_email = adresse_email;
+        if (mot_de_passe) {
+            user.mot_de_passe = await bcrypt.hash(mot_de_passe, 10);
+        }
+        if (numero_telephone) user.numero_telephone = numero_telephone;
+        if (departement) user.departement = departement;
     
+        await user.save();
+    
+        res.status(200).json({ message: 'Profil mis à jour avec succès' }); 
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Erreur du serveur' });
+    } 
 };
 
 
 const deleteUser = async (req, res) =>{
+    const {id} = req.parames
 
+    try {
+        const user = await utilisateur.findOne({where:{utilisateur_id : id}})
+
+        if(!user){
+            return res.status(400).json({message: 'Utilisateur non trouvé'})
+        }
+        await user.destroy()
+        res.status(200).json({ message: 'Utilisateur supprimé avec succès' });
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: 'Erreur du serveur' });
+    }
 };
 
 
@@ -83,6 +146,7 @@ module.exports = {
     getAllUser,
     getUser,
     createNewUser,
+    updateUserRole,
     updateUser,
     deleteUser
 }
