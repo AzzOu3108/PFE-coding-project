@@ -16,14 +16,14 @@ const getAllUser = async (req, res) => {
 };
 
 
-const getUser = async(req, res) =>{
+const getUserByName = async(req, res) =>{
     const {nom_complet} = req.body
 
     if(!nom_complet.length){
         return res.status(400).json({message: "Enter le nom complet d'utilisateur"})
     }
     try {
-        const user = await findOne({where:{nom_complet}})
+        const user = await utilisateur.findOne({where:{nom_complet}})
         if(!user){
             res.status(404).json({message: "Il n'y a pas d'utilisateur"})
         }
@@ -40,7 +40,7 @@ const createNewUser = async(req, res) =>{
 
     if (!nom_complet ||!adresse_email ||!mot_de_passe ||!numero_telephone ||!departement){
         return res.status(400).json({message: 'Veuillez saisir toutes les informations'})
-    }
+    } 
     try {
         const existingUser = await utilisateur.findOne({ where: { adresse_email } });
 
@@ -49,7 +49,7 @@ const createNewUser = async(req, res) =>{
         }
 
         const hashpwd = await bcrypt.hash(mot_de_passe, 10)
-
+        
         const newUser = await utilisateur.create({
             nom_complet,
             adresse_email,
@@ -70,7 +70,7 @@ const createNewUser = async(req, res) =>{
 };
 
 const updateUserRole = async (req, res) =>{
-    const {id} = req.parames
+    const {id} = req.params
     const {role_id} = req.body
 
     if(!role_id){
@@ -100,11 +100,13 @@ const updateUser = async (req, res) =>{
     if(!utilisateur_id){
         return res.status(400).json({message: "Utilisateur ID est requis"})
     }
-    if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-    }
+
     try {
         const user = await utilisateur.findByPk(utilisateur_id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
 
         if (nom_complet) user.nom_complet = nom_complet;
         if (adresse_email) user.adresse_email = adresse_email;
@@ -125,7 +127,7 @@ const updateUser = async (req, res) =>{
 
 
 const deleteUser = async (req, res) =>{
-    const {id} = req.parames
+    const {id} = req.params
 
     try {
         const user = await utilisateur.findOne({where:{utilisateur_id : id}})
@@ -144,7 +146,7 @@ const deleteUser = async (req, res) =>{
 
 module.exports = {
     getAllUser,
-    getUser,
+    getUserByName,
     createNewUser,
     updateUserRole,
     updateUser,
