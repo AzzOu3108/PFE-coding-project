@@ -16,20 +16,21 @@ const getAllUser = async (req, res) => {
 };
 
 
-const getUserByName = async(req, res) =>{
-    const {nom_complet} = req.body
+const getUserByName = async (req, res) => {
+    const { nom_complet } = req.body;
 
-    if(!nom_complet.length){
-        return res.status(400).json({message: "Enter le nom complet d'utilisateur"})
+    if (!nom_complet || !nom_complet.trim()) {
+        return res.status(400).json({ message: "Entrez le nom complet d'utilisateur" });
     }
+
     try {
-        const user = await utilisateur.findOne({where:{nom_complet}})
-        if(!user){
-            res.status(404).json({message: "Il n'y a pas d'utilisateur"})
+        const user = await utilisateur.findOne({ where: { nom_complet } });
+        if (!user) {
+            return res.status(404).json({ message: "Il n'y a pas d'utilisateur" });
         }
-        res.json({user})
+        res.json({ user });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.status(500).json({ message: 'Erreur du serveur' });
     }
 };

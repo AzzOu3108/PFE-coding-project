@@ -23,9 +23,6 @@ const utilisateur = sequelize.define('utilisateur', {
     numero_telephone: {
         type: DataTypes.STRING(10),
         allowNull: false,
-        validate: {
-            is: /^\d{10}$/, // Validate it has exactly 10 digits
-        },
     },
     departement: {
         type: DataTypes.STRING(100),
