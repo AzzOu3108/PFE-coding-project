@@ -101,12 +101,12 @@ const updateUser = async (req, res) =>{
     if(!utilisateur_id){
         return res.status(400).json({message: "Utilisateur ID est requis"})
     }
-
+    //*TODO in case of updating id doesn't exist you get the succes message instat of (404) user not found 
     try {
         const user = await utilisateur.findByPk(utilisateur_id);
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'Utilisateur introuvable' });
         }
 
         if (nom_complet) user.nom_complet = nom_complet;
