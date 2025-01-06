@@ -37,13 +37,13 @@ const getUserByName = async (req, res) => {
 
 
 const createNewUser = async(req, res) =>{
-    const { nom_complet, adresse_email, mot_de_passe, numero_telephone, departement } = req.body
+    const { utilisateur_id, nom_complet, adresse_email, mot_de_passe, numero_telephone, departement } = req.body
 
-    if (!nom_complet ||!adresse_email ||!mot_de_passe ||!numero_telephone ||!departement){
+    if (!utilisateur_id ||!nom_complet ||!adresse_email ||!mot_de_passe ||!numero_telephone ||!departement){
         return res.status(400).json({message: 'Veuillez saisir toutes les informations'})
     } 
     try {
-        const existingUser = await utilisateur.findOne({ where: { adresse_email } });
+        const existingUser = await utilisateur.findOne({ where: { utilisateur_id, adresse_email } });
 
         if(existingUser){
             return res.status(409).json({message:'Essayer avec un nouveau email'})
@@ -52,6 +52,7 @@ const createNewUser = async(req, res) =>{
         const hashpwd = await bcrypt.hash(mot_de_passe, 10)
         
         const newUser = await utilisateur.create({
+            utilisateur_id,
             nom_complet,
             adresse_email,
             mot_de_passe : hashpwd,

@@ -5,7 +5,8 @@ const utilisateur = sequelize.define('utilisateur', {
     utilisateur_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrement: true
+        autoIncrement: true,
+        unique: true
     },
     nom_complet: {
         type: DataTypes.CHAR(40),
