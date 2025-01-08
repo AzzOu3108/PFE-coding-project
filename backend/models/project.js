@@ -1,6 +1,6 @@
-const { DataTypes } = require('sequelize')
-const sequelize = require('../config/DB')
-const utilisateur = require('./users')
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/DB');
+const utilisateur = require('./users');
 
 const projet = sequelize.define('projet', {
     projet_id: {
@@ -8,10 +8,10 @@ const projet = sequelize.define('projet', {
         primaryKey: true,
         autoIncrement: true,
     },
-    utilisateur_id : {
+    utilisateur_id: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'utilisateur',
+            model: utilisateur,
             key: 'utilisateur_id'
         },
         allowNull: false
@@ -24,7 +24,7 @@ const projet = sequelize.define('projet', {
         type: DataTypes.INTEGER(10),
         allowNull: false
     },
-    function: {
+    function_de_projet: {
         type: DataTypes.STRING(70),
         allowNull: false
     },
@@ -61,20 +61,20 @@ const projet = sequelize.define('projet', {
         allowNull: false
     },
     date_de_debut: {
-        type: DataTypes.DATE(10),
+        type: DataTypes.DATE,
         allowNull: false
     },
     date_de_fin: {
-        type: DataTypes.DATE(10),
+        type: DataTypes.DATE,
         allowNull: false
     },
     buget_global: {
         type: DataTypes.INTEGER(20),
         allowNull: false
     }
-},{
+}, {
     tableName: 'projet',
-    timestamps: true
-})
+    timestamps: false
+});
 
-module.exports = projet
+module.exports = projet;

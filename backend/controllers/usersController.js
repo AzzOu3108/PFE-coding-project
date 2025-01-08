@@ -72,7 +72,7 @@ const createNewUser = async(req, res) =>{
 };
 
 const updateUserRole = async (req, res) =>{
-    const {id} = req.params
+    // const {id} = req.params
     const {role_id} = req.body
 
     if(!role_id){

@@ -14,6 +14,7 @@ app.use(cors(corsOptions))
 
 app.use(express.json())
 
+app.use('/projet', require('./routes/projectRouter'))
 app.use('/utilisateur', require('./routes/userRoutes'))
 
 app.get('^/home$|^/$', (req, res) => {
