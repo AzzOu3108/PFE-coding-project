@@ -108,7 +108,6 @@ const updateProject = async (req, res) => {
             return res.status(404).json({ message: "Projet introuvable." });
         }
 
-        // Validate the utilisateur_id if provided
         if (utilisateur_id) {
             const userExists = await utilisateur.findByPk(utilisateur_id);
             if (!userExists) {
@@ -116,12 +115,10 @@ const updateProject = async (req, res) => {
             }
         }
 
-        // Validate date range if both dates are provided
         if (date_de_debut && date_de_fin && new Date(date_de_debut) >= new Date(date_de_fin)) {
             return res.status(400).json({ message: "La date de début doit être antérieure à la date de fin." });
         }
 
-        // Update only the provided fields
         Object.assign(project, {
             utilisateur_id, 
             nom_complet, 
