@@ -1,3 +1,4 @@
+const { request } = require('express');
 const projet = require('../models/project')
 const utilisateur = require('../models/users')
 const { Op } = require('sequelize');
@@ -86,7 +87,7 @@ const createProject = async (req, res) => {
     }
 };
 
-//*TODO req.params mrahich joz
+
 const updateProject = async (req, res) => {
     const {
         utilisateur_id, nom_complet, numero_telephone_utilisateur, function_de_projet,
@@ -95,14 +96,14 @@ const updateProject = async (req, res) => {
         date_de_fin, buget_global
     } = req.body;
 
-    const { project_id } = req.params;
+    const { id } = req.params;
 
-    if (!project_id) {
+    if (!id) {
         return res.status(400).json({ message: "L'ID du projet est requis dans l'URL." });
     }
 
     try {
-        const project = await projet.findByPk(project_id);
+        const project = await projet.findByPk(id);
 
         if (!project) {
             return res.status(404).json({ message: "Projet introuvable." });

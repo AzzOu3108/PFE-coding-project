@@ -3,7 +3,7 @@ const sequelize = require('../config/DB');
 const utilisateur = require('./users');
 
 const projet = sequelize.define('projet', {
-    projet_id: {
+    id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
@@ -12,7 +12,7 @@ const projet = sequelize.define('projet', {
         type: DataTypes.INTEGER,
         references: {
             model: utilisateur,
-            key: 'utilisateur_id'
+            key: 'id'
         },
         allowNull: false
     },
@@ -45,7 +45,7 @@ const projet = sequelize.define('projet', {
         allowNull: false
     },
     nom_de_projet: {
-        type: DataTypes.CHAR(40),
+        type: DataTypes.STRING(40),
         allowNull: false
     },
     controle_des_couts: {
