@@ -37,13 +37,13 @@ const getUserByName = async (req, res) => {
 
 
 const createNewUser = async(req, res) =>{
-    const { utilisateur_id, nom_complet, adresse_email, mot_de_passe, numero_telephone, departement } = req.body
+    const { matricule, nom_complet, adresse_email, mot_de_passe, numero_telephone, departement } = req.body
 
-    if (!utilisateur_id ||!nom_complet ||!adresse_email ||!mot_de_passe ||!numero_telephone ||!departement){
+    if (!matricule ||!nom_complet ||!adresse_email ||!mot_de_passe ||!numero_telephone ||!departement){
         return res.status(400).json({message: 'Veuillez saisir toutes les informations'})
     } 
     try {
-        const existingUser = await utilisateur.findOne({ where: { utilisateur_id, adresse_email } });
+        const existingUser = await utilisateur.findOne({ where: { matricule, adresse_email } });
 
         if(existingUser){
             return res.status(409).json({message:'Essayer avec un nouveau email'})
@@ -52,7 +52,7 @@ const createNewUser = async(req, res) =>{
         const hashpwd = await bcrypt.hash(mot_de_passe, 10)
         
         const newUser = await utilisateur.create({
-            utilisateur_id,
+            matricule,
             nom_complet,
             adresse_email,
             mot_de_passe : hashpwd,
@@ -97,19 +97,20 @@ const updateUserRole = async (req, res) =>{
 const updateUser = async (req, res) =>{
     // use ID from the "auth middleware" here in middleware implementation
     // const utilisateur_id = req.user.id;
-    const { utilisateur_id, nom_complet, adresse_email, mot_de_passe, numero_telephone, departement } = req.body;
+    const { id, matricule, nom_complet, adresse_email, mot_de_passe, numero_telephone, departement } = req.body;
 
-    if(!utilisateur_id){
+    if(! id){
         return res.status(400).json({message: "Utilisateur ID est requis"})
     }
-    //*TODO in case of updating id doesn't exist you get the succes message instat of (404) user not found 
     try {
-        const user = await utilisateur.findByPk(utilisateur_id);
+        console.log(`Recherche de l'utilisateur avec ID: ${id}`);
+        const user = await utilisateur.findByPk(id);
 
         if (!user) {
             return res.status(404).json({ message: 'Utilisateur introuvable' });
         }
 
+        if(matricule) user.matricule = matricule;
         if (nom_complet) user.nom_complet = nom_complet;
         if (adresse_email) user.adresse_email = adresse_email;
         if (mot_de_passe) {
@@ -132,7 +133,7 @@ const deleteUser = async (req, res) =>{
     const {id} = req.params
 
     try {
-        const user = await utilisateur.findOne({where:{utilisateur_id : id}})
+        const user = await utilisateur.findOne({where:{id}})
 
         if(!user){
             return res.status(400).json({message: 'Utilisateur non trouvé'})

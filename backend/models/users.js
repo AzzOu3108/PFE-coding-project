@@ -2,10 +2,15 @@ const { DataTypes } = require('sequelize')
 const sequelize = require('../config/DB')
 
 const utilisateur = sequelize.define('utilisateur', {
-    utilisateur_id: {
+    id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
+        unique: true
+    },
+    matricule: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
         unique: true
     },
     nom_complet: {
