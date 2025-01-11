@@ -17,9 +17,9 @@ const getAllUser = async (req, res) => {
 
 
 const getUserByName = async (req, res) => {
-    const { nom_complet } = req.body;
+    const { nom_complet } = req.query;
 
-    if (!nom_complet || !nom_complet.trim()) {
+    if (!nom_complet) {
         return res.status(400).json({ message: "Entrez le nom complet d'utilisateur" });
     }
 

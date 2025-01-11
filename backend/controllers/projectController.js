@@ -1,7 +1,6 @@
 const { request } = require('express');
 const projet = require('../models/project')
 const utilisateur = require('../models/users')
-const { Op } = require('sequelize');
 
 const getAllProjects = async (req, res) => {
     try {
@@ -27,7 +26,7 @@ const getProjectByName = async (req, res) => {
 
     try {
         const project = await projet.findOne({
-            where: { nom_de_projet: { [Op.iLike]: `%${nom_de_projet}%` } },
+            where: { nom_de_projet },
         });
 
         if (!project) {
