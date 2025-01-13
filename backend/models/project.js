@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/DB');
 const utilisateur = require('./users');
+const tache = require('./tasks')
 
 const projet = sequelize.define('projet', {
     id: {
@@ -75,6 +76,18 @@ const projet = sequelize.define('projet', {
 }, {
     tableName: 'projet',
     timestamps: false
+});
+
+projet.belongsToMany(utilisateur, {
+    through: 'projet_utilisateur',
+    foreignKey: 'projet_id',
+    otherKey: 'utilisateur_id',
+    as: 'participants'
+});
+
+projet.hasMany(tache, {
+    foreignKey: 'projet_id',
+    as: 'tasks'
 });
 
 module.exports = projet;
