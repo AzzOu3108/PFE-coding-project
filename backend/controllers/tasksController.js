@@ -20,7 +20,22 @@ const getAllTasks = async (req, res) =>{
 };
 
 const createTask = async (req, res) =>{
+    const {titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids} = req.body
 
+    if(!titre ||!equipe ||!statut ||!date_de_debut_tache ||!date_de_fin_tache ||!poids){
+        return res.status(400).json({ message: "Veuillez remplir tous les champs." });
+    }
+
+    if (new Date(date_de_debut_tache) >= new Date(date_de_fin_tache)) {
+        return res.status(400).json({ message: "La date de début doit être antérieure à la date de fin." });
+    }
+
+    try {
+        const existingTask = await tache.findOne({where: titre, })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur du serveur." });
+    }
 };
 
 const updateTask = async (req, req) =>{
