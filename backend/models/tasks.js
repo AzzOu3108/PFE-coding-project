@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize')
-const sequelize = require('../config/DB')
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/DB');
 
 const tache = sequelize.define('tache', {
     id: {
@@ -13,28 +13,34 @@ const tache = sequelize.define('tache', {
         allowNull: false
     },
     equipe: {
-        type: DataTypes.CHAR(50),
+        type: DataTypes.STRING(50), // Changed from CHAR to STRING for flexibility
         allowNull: false
     },
     statut: {
-        type: DataTypes.CHAR(11),
-        allowNull: false
+        type: DataTypes.STRING(11), // Changed from CHAR to STRING for consistency
+        allowNull: false,
+        validate: {
+            isIn: [['pending', 'in_progress', 'completed']]
+        }
     },
-    data_de_debut_tache: {
+    date_de_debut_tache: { 
         type: DataTypes.DATE,
         allowNull: false
     },
-    data_de_fin_tache: {
+    date_de_fin_tache: { 
         type: DataTypes.DATE,
-        allowNull:false
+        allowNull: false,
+        validate: {
+            isAfter: this.date_de_debut_tache 
+        }
     },
     poids: {
-        type: DataTypes.INTEGER(3),
+        type: DataTypes.INTEGER, 
         allowNull: false
     }
-},{
-    tableName:'tache',
+}, {
+    tableName: 'tache',
     timestamps: false
-})
+});
 
-module.exports = tache
+module.exports = tache;
