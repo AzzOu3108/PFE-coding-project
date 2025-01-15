@@ -12,6 +12,12 @@ utilisateur.belongsTo(role, {
     as: 'role'
 });
 
+role.hasOne(utilisateur, { 
+    foreignKey: 'role_id',
+    as: 'user' 
+});
+
+
 utilisateur.belongsToMany(projet, {
     through: projet_utilisateur,
     foreignKey: 'utilisateur_id',
