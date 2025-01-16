@@ -16,7 +16,7 @@ const getAllProjects = async (req, res) => {
         res.status(500).json({ message: "Erreur du serveur." });
     }
 };
-//* i couldn't send query request in postman
+
 const getProjectByName = async (req, res) => {
     const { nom_de_projet } = req.query;
     
@@ -42,13 +42,13 @@ const getProjectByName = async (req, res) => {
 
 const createProject = async (req, res) => {
     const {
-        utilisateur_id, nom_complet, numero_telephone_utilisateur, function_de_projet,
+        matricule, nom_complet, numero_telephone_utilisateur, function_de_projet,
         departement, nom_programme, sponsor_de_programme, manager_de_projet,
         nom_de_projet, controle_des_couts, description, objective, date_de_debut,
         date_de_fin, buget_global
     } = req.body;
 
-    if (!utilisateur_id || !nom_complet || !numero_telephone_utilisateur || !function_de_projet ||
+    if (!matricule || !nom_complet || !numero_telephone_utilisateur || !function_de_projet ||
         !departement || !nom_programme || !sponsor_de_programme || !manager_de_projet ||
         !nom_de_projet || !controle_des_couts || !description || !objective || !date_de_debut ||
         !date_de_fin || !buget_global) {
@@ -60,7 +60,7 @@ const createProject = async (req, res) => {
     }
 
     try {
-        const existingUser = await utilisateur.findByPk(utilisateur_id);
+        const existingUser = await utilisateur.findByPk(id);
 
         if (!existingUser) {
             return res.status(404).json({ message: "L'utilisateur avec cet ID n'existe pas." });
@@ -73,7 +73,7 @@ const createProject = async (req, res) => {
         }
 
         const newProject = await projet.create({
-            utilisateur_id, nom_complet, numero_telephone_utilisateur, function_de_projet,
+            matricule, nom_complet, numero_telephone_utilisateur, function_de_projet,
             departement, nom_programme, sponsor_de_programme, manager_de_projet,
             nom_de_projet, controle_des_couts, description, objective, date_de_debut,
             date_de_fin, buget_global

@@ -1,6 +1,6 @@
 const { where } = require('sequelize');
 const utilisateur = require('../models/users');
-const role = require('../models/role');
+const role = require('../models/roles');
 const bcrypt = require('bcryptjs');
 
 const getAllUser = async (req, res) => {
