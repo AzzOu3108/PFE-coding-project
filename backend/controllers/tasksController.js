@@ -1,6 +1,7 @@
 const tache = require('../models/tasks')
 const projet = require('../models/project')
-const utilisateur = require('../models/users')
+const utilisateur = require('../models/users');
+const tache = require('../models/tasks');
 
 const getAllTasks = async (req, res) =>{
     try {
@@ -31,7 +32,15 @@ const createTask = async (req, res) =>{
     }
 
     try {
-        const existingTask = await tache.findOne({where: titre, })
+        const existingTask = await tache.findOne({where: titre })
+        if(existingTask){
+            return res.status(409).json({message: "Ce tache existe déjà."})
+        }
+
+        const newTask = await tache.create({
+            titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids
+        })
+        res.status(201).json({ message: "tache créé avec succès.", newTask });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur du serveur." });
@@ -39,7 +48,20 @@ const createTask = async (req, res) =>{
 };
 
 const updateTask = async (req, req) =>{
+    const {id} = req.params
+    const {titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids} = req.body
 
+    if(!id){
+        return res.status(400).json({ message: "L'ID du tache est requis dans l'URL." });
+    }
+    try {
+        const task = await tache.findByPk(id)
+        if (!task) {
+            return res.status(404).json({ message: "Tache introuvable." });
+        }
+    } catch (error) {
+        
+    }
 };
 
 const deleteTask = async (req, res) =>{
