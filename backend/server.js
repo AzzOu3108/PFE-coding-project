@@ -16,7 +16,7 @@ app.use(express.json())
 
 app.use('/utilisateur', require('./routes/userRoutes'))
 app.use('/projet', require('./routes/projectRouter'))
-// app.use('/tache', require('./routes/taskRouter'))
+app.use('/tache', require('./routes/taskRouter'))
 
 app.get('^/home$|^/$', (req, res) => {
     res.status(200).json({

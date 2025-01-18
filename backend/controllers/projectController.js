@@ -4,7 +4,15 @@ const utilisateur = require('../models/users')
 
 const getAllProjects = async (req, res) => {
     try {
-        const projects = await projet.findAll();
+        const projects = await projet.findAll({
+            include: [
+                {
+                    model: tache,
+                    as: 'taches', // Alias as per your association definition
+                    attributes: ['id', 'titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache'], // Customize fields
+                },
+            ],
+        });
 
         if (!projects.length) {
             return res.status(404).json({ message: "Aucun projet disponible." });
@@ -19,7 +27,7 @@ const getAllProjects = async (req, res) => {
 
 const getProjectByName = async (req, res) => {
     const { nom_de_projet } = req.query;
-    
+
     if (!nom_de_projet) {
         return res.status(400).json({ message: "Veuillez fournir un nom de projet." });
     }
@@ -27,6 +35,13 @@ const getProjectByName = async (req, res) => {
     try {
         const project = await projet.findOne({
             where: { nom_de_projet },
+            include: [
+                {
+                    model: tache,
+                    as: 'taches',
+                    attributes: ['id', 'titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache'],
+                },
+            ],
         });
 
         if (!project) {
@@ -42,17 +57,17 @@ const getProjectByName = async (req, res) => {
 
 const createProject = async (req, res) => {
     const {
-        matricule, nom_complet, numero_telephone_utilisateur, function_de_projet,
-        departement, nom_programme, sponsor_de_programme, manager_de_projet,
-        nom_de_projet, controle_des_couts, description, objective, date_de_debut,
-        date_de_fin, buget_global
+        nom_de_projet,
+        controle_des_couts,
+        description,
+        objective,
+        date_de_debut,
+        date_de_fin,
+        buget_global
     } = req.body;
 
-    if (!matricule || !nom_complet || !numero_telephone_utilisateur || !function_de_projet ||
-        !departement || !nom_programme || !sponsor_de_programme || !manager_de_projet ||
-        !nom_de_projet || !controle_des_couts || !description || !objective || !date_de_debut ||
-        !date_de_fin || !buget_global) {
-        return res.status(400).json({ message: "Veuillez remplir tous les champs." });
+    if (!nom_de_projet || !description || !objective || !date_de_debut || !date_de_fin || !buget_global) {
+        return res.status(400).json({ message: "Veuillez remplir tous les champs obligatoires." });
     }
 
     if (new Date(date_de_debut) >= new Date(date_de_fin)) {
@@ -60,23 +75,21 @@ const createProject = async (req, res) => {
     }
 
     try {
-        const existingUser = await utilisateur.findByPk(id);
-
-        if (!existingUser) {
-            return res.status(404).json({ message: "L'utilisateur avec cet ID n'existe pas." });
-        }
-
+        // Check if project already exists
         const existingProject = await projet.findOne({ where: { nom_de_projet } });
-
         if (existingProject) {
             return res.status(409).json({ message: "Ce projet existe déjà." });
         }
 
+        // Create the project
         const newProject = await projet.create({
-            matricule, nom_complet, numero_telephone_utilisateur, function_de_projet,
-            departement, nom_programme, sponsor_de_programme, manager_de_projet,
-            nom_de_projet, controle_des_couts, description, objective, date_de_debut,
-            date_de_fin, buget_global
+            nom_de_projet,
+            controle_des_couts,
+            description,
+            objective,
+            date_de_debut,
+            date_de_fin,
+            buget_global
         });
 
         res.status(201).json({ message: "Projet créé avec succès.", newProject });
@@ -88,14 +101,8 @@ const createProject = async (req, res) => {
 
 
 const updateProject = async (req, res) => {
-    const {
-        utilisateur_id, nom_complet, numero_telephone_utilisateur, function_de_projet,
-        departement, nom_programme, sponsor_de_programme, manager_de_projet,
-        nom_de_projet, controle_des_couts, description, objective, date_de_debut,
-        date_de_fin, buget_global
-    } = req.body;
-
     const { id } = req.params;
+    const updateData = req.body;
 
     if (!id) {
         return res.status(400).json({ message: "L'ID du projet est requis dans l'URL." });
@@ -108,34 +115,7 @@ const updateProject = async (req, res) => {
             return res.status(404).json({ message: "Projet introuvable." });
         }
 
-        if (utilisateur_id) {
-            const userExists = await utilisateur.findByPk(utilisateur_id);
-            if (!userExists) {
-                return res.status(404).json({ message: "Utilisateur introuvable." });
-            }
-        }
-
-        if (date_de_debut && date_de_fin && new Date(date_de_debut) >= new Date(date_de_fin)) {
-            return res.status(400).json({ message: "La date de début doit être antérieure à la date de fin." });
-        }
-
-        Object.assign(project, {
-            utilisateur_id, 
-            nom_complet, 
-            numero_telephone_utilisateur,
-            function_de_projet,
-            departement,
-            nom_programme, 
-            sponsor_de_programme,
-            manager_de_projet,
-            nom_de_projet, 
-            controle_des_couts, 
-            description, 
-            objective, 
-            date_de_debut,
-            date_de_fin, 
-            buget_global
-        });
+        Object.assign(project, updateData);
 
         await project.save();
 
@@ -145,7 +125,6 @@ const updateProject = async (req, res) => {
         res.status(500).json({ message: "Erreur du serveur." });
     }
 };
-
 
 const deleteProject = async (req, res) => {
     const { nom_de_projet } = req.body;
