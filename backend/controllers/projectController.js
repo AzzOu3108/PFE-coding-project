@@ -1,6 +1,7 @@
 const { request } = require('express');
 const projet = require('../models/project')
-const utilisateur = require('../models/users')
+const projet_utilisateur = require('../models/projet_utilisateur')
+const tache = require('../models/index')
 
 const getAllProjects = async (req, res) => {
     try {
@@ -12,8 +13,8 @@ const getAllProjects = async (req, res) => {
                     attributes: ['id', 'titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache'], // Customize fields
                 },
             ],
-        });
-
+        })
+        
         if (!projects.length) {
             return res.status(404).json({ message: "Aucun projet disponible." });
         }
@@ -63,10 +64,11 @@ const createProject = async (req, res) => {
         objective,
         date_de_debut,
         date_de_fin,
-        buget_global
+        buget_global,
+        utilisateur_id
     } = req.body;
 
-    if (!nom_de_projet || !description || !objective || !date_de_debut || !date_de_fin || !buget_global) {
+    if (!nom_de_projet || !description || !objective || !date_de_debut || !date_de_fin || !buget_global ||!utilisateur_id) {
         return res.status(400).json({ message: "Veuillez remplir tous les champs obligatoires." });
     }
 
@@ -91,6 +93,11 @@ const createProject = async (req, res) => {
             date_de_fin,
             buget_global
         });
+
+        await projet_utilisateur.create({
+            projet_id: newProject.id,
+            utilisateur_id
+        })
 
         res.status(201).json({ message: "Projet créé avec succès.", newProject });
     } catch (error) {
