@@ -58,7 +58,11 @@ const getProjectByName = async (req, res) => {
 
 const createProject = async (req, res) => {
     const {
+        function_de_projet,
         nom_de_projet,
+        nom_programme,
+        sponsor_de_programme,
+        manager_de_projet,
         controle_des_couts,
         description,
         objective,
@@ -68,7 +72,17 @@ const createProject = async (req, res) => {
         utilisateur_id
     } = req.body;
 
-    if (!nom_de_projet || !description || !objective || !date_de_debut || !date_de_fin || !buget_global ||!utilisateur_id) {
+    if (!nom_de_projet || 
+        !function_de_projet || 
+        !nom_programme ||
+        !sponsor_de_programme ||
+        !manager_de_projet ||  
+        !description || 
+        !objective || 
+        !date_de_debut || 
+        !date_de_fin || 
+        !buget_global ||
+        !utilisateur_id) {
         return res.status(400).json({ message: "Veuillez remplir tous les champs obligatoires." });
     }
 
@@ -85,6 +99,10 @@ const createProject = async (req, res) => {
 
         // Create the project
         const newProject = await projet.create({
+            function_de_projet,
+            nom_programme,
+            sponsor_de_programme,
+            manager_de_projet,
             nom_de_projet,
             controle_des_couts,
             description,
