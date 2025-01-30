@@ -1,20 +1,22 @@
 const { request } = require('express');
 const projet = require('../models/project')
 const projet_utilisateur = require('../models/projet_utilisateur')
-const tache = require('../models/index')
+const tache = require('../models/tasks')
 
 const getAllProjects = async (req, res) => {
+    console.log("projet associations:", projet.associations); // Check if the association is defined
+    console.log("tache associations:", tache.associations); // Check if the association is defined
     try {
         const projects = await projet.findAll({
             include: [
                 {
                     model: tache,
-                    as: 'taches', // Alias as per your association definition
-                    attributes: ['id', 'titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache'], // Customize fields
+                    as: 'taches', // Must match the alias defined in the association
+                    attributes: ['id', 'titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache'],
                 },
             ],
-        })
-        
+        });
+
         if (!projects.length) {
             return res.status(404).json({ message: "Aucun projet disponible." });
         }
@@ -57,6 +59,7 @@ const getProjectByName = async (req, res) => {
 };
 
 const createProject = async (req, res) => {
+    // TODO: Extracting req.userId from Token ki tlha9 l auth and Authorization
     const {
         function_de_projet,
         nom_de_projet,
@@ -124,7 +127,6 @@ const createProject = async (req, res) => {
     }
 };
 
-
 const updateProject = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
@@ -152,20 +154,33 @@ const updateProject = async (req, res) => {
 };
 
 const deleteProject = async (req, res) => {
-    const { nom_de_projet } = req.body;
-
-    if (!nom_de_projet) {
-        return res.status(400).json({ message: "Veuillez fournir le nom du projet à supprimer." });
-    }
+    const { id } = req.params;
+     // TODO: Extracting req.userId from Token ki tlha9 l auth and Authorization
+    const { utilisateur_id } = req.body;
 
     try {
-        const project = await projet.findOne({ where: { nom_de_projet } });
+        const userProject = await projet_utilisateur.findOne({
+            where: {
+                utilisateur_id: utilisateur_id,
+                projet_id: id
+            }
+        });
 
-        if (!project) {
-            return res.status(404).json({ message: "Projet introuvable." });
+        if (!userProject) {
+            return res.status(404).json({ message: "Projet introuvable ou vous n'avez pas la permission de supprimer ce projet." });
         }
 
-        await project.destroy();
+        await projet_utilisateur.destroy({
+            where: {
+                projet_id: id
+            }
+        });
+
+        await projet.destroy({
+            where: {
+                id: id
+            }
+        });
 
         res.status(200).json({ message: "Projet supprimé avec succès." });
     } catch (error) {

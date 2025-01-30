@@ -30,30 +30,30 @@ utilisateur.belongsToMany(tache, {
     as: 'taches'
 });
 
+// Define associations
 projet.belongsToMany(utilisateur, {
     through: 'projet_utilisateur',
     foreignKey: 'projet_id',
-    as: 'utilisateurs'
+    as: 'utilisateurs',
 });
 
 projet.belongsToMany(tache, {
     through: 'tache_projet',
     foreignKey: 'projet_id',
-    as: 'taches'
+    as: 'taches',
 });
 
 tache.belongsToMany(utilisateur, {
     through: 'tache_utilisateur',
     foreignKey: 'tache_id',
-    as: 'utilisateurs'
+    as: 'utilisateurs',
 });
 
 tache.belongsToMany(projet, {
     through: 'tache_projet',
     foreignKey: 'tache_id',
-    as: 'projets'
+    as: 'projets',
 });
-
 
 module.exports = {
     sequelize,

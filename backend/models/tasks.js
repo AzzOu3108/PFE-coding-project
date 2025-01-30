@@ -6,41 +6,44 @@ const tache = sequelize.define('tache', {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-        unique: true
+        unique: true,
     },
     titre: {
         type: DataTypes.STRING(30),
-        allowNull: false
+        allowNull: false,
     },
     equipe: {
-        type: DataTypes.STRING(50), // Changed from CHAR to STRING for flexibility
-        allowNull: false
+        type: DataTypes.STRING(50),
     },
     statut: {
-        type: DataTypes.STRING(11), // Changed from CHAR to STRING for consistency
+        type: DataTypes.STRING(11),
         allowNull: false,
         validate: {
-            isIn: [['pending', 'in_progress', 'completed']]
-        }
+            isIn: [['A faire', 'En cours', 'Terminée', 'En attente', 'Annulée']],
+        },
     },
-    date_de_debut_tache: { 
+    date_de_debut_tache: {
         type: DataTypes.DATE,
-        allowNull: false
+        allowNull: false,
     },
-    date_de_fin_tache: { 
+    date_de_fin_tache: {
         type: DataTypes.DATE,
         allowNull: false,
         validate: {
-            isAfter: this.date_de_debut_tache 
-        }
+            isAfter: function (value) {
+                if (this.date_de_debut_tache && value <= this.date_de_debut_tache) {
+                    throw new Error('La date de fin doit être après la date de début.');
+                }
+            },
+        },
     },
     poids: {
-        type: DataTypes.INTEGER, 
-        allowNull: false
-    }
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
 }, {
     tableName: 'tache',
-    timestamps: false
+    timestamps: false,
 });
 
 module.exports = tache;
