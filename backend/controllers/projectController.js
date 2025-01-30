@@ -1,7 +1,5 @@
 const { request } = require('express');
-const projet = require('../models/project')
-const projet_utilisateur = require('../models/projet_utilisateur')
-const tache = require('../models/tasks')
+const { projet, tache, projet_utilisateur } = require("../models");
 
 const getAllProjects = async (req, res) => {
     console.log("projet associations:", projet.associations); // Check if the association is defined

@@ -1,8 +1,4 @@
-const tache = require('../models/tasks');
-const projet = require('../models/project');
-const utilisateur = require('../models/users');
-const tache_utilisateur = require('../models/tache_utilisateur');
-const tache_projet = require('../models/tache_projet');
+const { tache, projet, utilisateur, tache_utilisateur, tache_projet } = require("../models");
 
 // Get all tasks for a project, including join tables
 const getAllTasks = async (req, res) => {
@@ -12,8 +8,8 @@ const getAllTasks = async (req, res) => {
         const tasks = await tache.findAll({
             where: { projet_id },
             include: [
-                { model: projet, attributes: ['nom_de_projet'] },
-                { model: utilisateur, attributes: ['nom_complet'], through: { model: tache_utilisateur }, as: 'equipe' }, 
+                { model: projet, attributes: ['nom_de_projet'], as:'projets' },
+                { model: utilisateur, attributes: ['nom_complet'], through: { model: tache_utilisateur }, as: 'utilisateurs' }, 
                 { model: tache_projet, attributes: ['projet_id'], where: { projet_id }, required: false },
             ],
         });
