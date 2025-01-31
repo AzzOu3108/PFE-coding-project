@@ -28,6 +28,7 @@ const getAllTasks = async (req, res) => {
 // Create a new task and assign users with join table
 const createTask = async (req, res) => {
     const { titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids, projet_id } = req.body;
+    console.log("Received data:", req.body); //! test
 
     if (!titre || !equipe || !statut || !date_de_debut_tache || !date_de_fin_tache || !poids || !projet_id) {
         return res.status(400).json({ message: "Veuillez remplir tous les champs." });
@@ -44,6 +45,13 @@ const createTask = async (req, res) => {
             return res.status(404).json({ message: "Projet introuvable." });
         }
 
+        const users = utilisateur.findAll({where:{nom_complet: equipe}})
+        console.log("Found users:", users); //! test
+
+        if(users.length !== equipe.length){
+            return res.status(404).json({message: "Un ou plusieurs utilisateurs n'existent pas"})
+        }
+        console.log("All users found, creating the task...");//! test
         const newTask = await tache.create({
             titre,
             statut,
@@ -53,19 +61,19 @@ const createTask = async (req, res) => {
             projet_id,
         });
 
-        // Check if users exist and associate them with the task
-        const users = await utilisateur.findAll({
-            where: { id: equipe } 
-        });
-
-        if (users.length === 0) {
-            return res.status(404).json({ message: "Aucun utilisateur trouvé." });
+        for(const user of users){
+            await tache_utilisateur.create({
+                utilisateur_id: user.id,
+                tache_id: newTask.id
+            })
         }
+        
 
-        // Create associations in the join table
-        await newTask.setEquipe(users);
-
-        res.status(201).json({ message: "Tâche créée et assignée avec succès.", newTask });
+        res.status(201).json({
+        message: "Tâche créée avec succès",
+        tache: newTask,
+        equipe: users.map(user => user.nom_complet) // Return assigned users
+    });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur du serveur." });
