@@ -28,7 +28,7 @@ const getAllTasks = async (req, res) => {
 // Create a new task and assign users with join table
 const createTask = async (req, res) => {
     const { titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids, projet_id } = req.body;
-    console.log("Received data:", req.body); //! test
+    // console.log("Received data:", req.body); //! test
 
     if (!titre || !equipe || !statut || !date_de_debut_tache || !date_de_fin_tache || !poids || !projet_id) {
         return res.status(400).json({ message: "Veuillez remplir tous les champs." });
@@ -39,19 +39,23 @@ const createTask = async (req, res) => {
     }
 
     try {
-        
+        const existingtask = await tache.findOne({where:{titre}});
+        if(existingtask){
+            return res.status(409).json({message: "la tâche existe déjà"})
+        }
+
         const project = await projet.findByPk(projet_id);
         if (!project) {
             return res.status(404).json({ message: "Projet introuvable." });
         }
 
-        const users = utilisateur.findAll({where:{nom_complet: equipe}})
-        console.log("Found users:", users); //! test
+        const users = await utilisateur.findAll({where:{nom_complet: equipe}})
+        // console.log("Found users:", users); //! test
 
         if(users.length !== equipe.length){
             return res.status(404).json({message: "Un ou plusieurs utilisateurs n'existent pas"})
         }
-        console.log("All users found, creating the task...");//! test
+        // console.log("All users found, creating the task...");//! test
         const newTask = await tache.create({
             titre,
             statut,
@@ -61,18 +65,22 @@ const createTask = async (req, res) => {
             projet_id,
         });
 
-        for(const user of users){
-            await tache_utilisateur.create({
-                utilisateur_id: user.id,
-                tache_id: newTask.id
-            })
-        }
+        await tache_projet.create({
+            tache_id: newTask.id,
+            projet_id: projet_id
+        });
+
+        const userTaskEntries = users.map(user => ({
+            utilisateur_id: user.id,
+            tache_id: newTask.id
+        }));
         
+        await tache_utilisateur.bulkCreate(userTaskEntries); 
 
         res.status(201).json({
         message: "Tâche créée avec succès",
         tache: newTask,
-        equipe: users.map(user => user.nom_complet) // Return assigned users
+        equipe: users.length > 0 ? users.map(user => user.nom_complet) : "Aucune équipe assignée"
     });
     } catch (error) {
         console.error(error);

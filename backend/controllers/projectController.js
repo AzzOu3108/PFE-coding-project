@@ -1,25 +1,40 @@
 const { request } = require('express');
-const { projet, tache, projet_utilisateur } = require("../models");
+const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur } = require("../models");
 
 const getAllProjects = async (req, res) => {
-    console.log("projet associations:", projet.associations); // Check if the association is defined
-    console.log("tache associations:", tache.associations); // Check if the association is defined
+    
     try {
         const projects = await projet.findAll({
             include: [
                 {
                     model: tache,
-                    as: 'taches', // Must match the alias defined in the association
-                    attributes: ['id', 'titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache'],
+                    through: "tache_projet",
+                    as: 'taches',
+                    attributes: ['titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'],
+                    
+                    include: [{
+                        model: utilisateur,
+                        through: { attributes: [] },
+                        as: "utilisateurs",
+                        attributes: ['nom_complet']
+                    }]
                 },
             ],
         });
+        // Manually rename "utilisateurs" to "equipe"
+        const formattedProjects = projects.map(project => ({
+            ...project.toJSON(),
+            taches: project.taches.map(task => ({
+                ...task.toJSON(),
+                equipe: task.utilisateurs.map(user => user.nom_complet) 
+            }))
+        }));
 
         if (!projects.length) {
             return res.status(404).json({ message: "Aucun projet disponible." });
         }
 
-        res.status(200).json({ projects });
+        res.status(200).json({ formattedProjects });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur du serveur." });
