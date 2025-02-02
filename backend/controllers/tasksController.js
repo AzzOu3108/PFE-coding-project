@@ -61,6 +61,7 @@ const createTask = async (req, res) => {
             statut,
             date_de_debut_tache,
             date_de_fin_tache,
+            equipe: users.map(user => user.nom_complet),
             poids,
             projet_id,
         });

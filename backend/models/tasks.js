@@ -13,7 +13,7 @@ const tache = sequelize.define('tache', {
         allowNull: false,
     },
     equipe: {
-        type: DataTypes.STRING(50),
+        type: DataTypes.JSON,
     },
     statut: {
         type: DataTypes.STRING(11),
