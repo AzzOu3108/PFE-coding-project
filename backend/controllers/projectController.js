@@ -8,7 +8,7 @@ const getAllProjects = async (req, res) => {
             include: [
                 {
                     model: tache,
-                    through: "tache_projet",
+                    through: { attributes: [] },
                     as: 'taches',
                     attributes: ['titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'],
                     
@@ -17,16 +17,17 @@ const getAllProjects = async (req, res) => {
                         through: { attributes: [] },
                         as: "utilisateurs",
                         attributes: ['nom_complet']
-                    }]
+                    }], 
                 },
-            ],
+            ], attributes: {exclude :['id']}
         });
         // Manually rename "utilisateurs" to "equipe"
-        const formattedProjects = projects.map(project => ({
+        const Projets = projects.map(project => ({
             ...project.toJSON(),
             taches: project.taches.map(task => ({
                 ...task.toJSON(),
-                equipe: task.utilisateurs.map(user => user.nom_complet) 
+                equipe: task.utilisateurs.map(user => user.nom_complet),
+                utilisateurs: undefined 
             }))
         }));
 
@@ -34,7 +35,7 @@ const getAllProjects = async (req, res) => {
             return res.status(404).json({ message: "Aucun projet disponible." });
         }
 
-        res.status(200).json({ formattedProjects });
+        res.status(200).json({ Projets });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur du serveur." });
@@ -51,11 +52,19 @@ const getProjectByName = async (req, res) => {
     try {
         const project = await projet.findOne({
             where: { nom_de_projet },
+            attributes: { exclude: ['id'] },
             include: [
                 {
                     model: tache,
+                    through: { attributes: [] },
                     as: 'taches',
-                    attributes: ['id', 'titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache'],
+                    attributes: ['titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'],
+                    include: [{
+                        model: utilisateur,
+                        through: { attributes: [] },
+                        as: "utilisateurs",
+                        attributes: ['nom_complet']
+                    }],
                 },
             ],
         });
@@ -64,7 +73,16 @@ const getProjectByName = async (req, res) => {
             return res.status(404).json({ message: "Aucun projet correspondant." });
         }
 
-        res.status(200).json({ project });
+        const Projet = {
+            ...project.toJSON(),
+            taches: project.taches.map(task => ({
+                ...task.toJSON(),
+                equipe: task.utilisateurs.map(user => user.nom_complet),
+                utilisateurs: undefined 
+            }))
+        };
+
+        res.status(200).json({ Projet });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur du serveur." });
