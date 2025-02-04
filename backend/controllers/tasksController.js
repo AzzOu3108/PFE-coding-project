@@ -61,7 +61,6 @@ const createTask = async (req, res) => {
             statut,
             date_de_debut_tache,
             date_de_fin_tache,
-            equipe: users.map(user => user.nom_complet),
             poids,
             projet_id,
         });
@@ -89,7 +88,7 @@ const createTask = async (req, res) => {
     }
 };
 
-// Update a task and reassign users with join table
+
 const updateTask = async (req, res) => {
     const { id } = req.params;
     const { titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids, projet_id } = req.body;
@@ -100,12 +99,10 @@ const updateTask = async (req, res) => {
 
     try {
         const task = await tache.findByPk(id);
-
         if (!task) {
             return res.status(404).json({ message: "Tâche introuvable." });
         }
 
-        // Check if the project exists
         if (projet_id) {
             const projectExists = await projet.findByPk(projet_id);
             if (!projectExists) {
@@ -113,17 +110,15 @@ const updateTask = async (req, res) => {
             }
         }
 
-        // Check if users exist and update assignment
         if (equipe) {
             const users = await utilisateur.findAll({
-                where: { id: equipe } 
+                where: { nom_complet: equipe }
             });
 
             if (users.length === 0) {
                 return res.status(404).json({ message: "Aucun utilisateur trouvé." });
             }
 
-            // Update the task-user association in the join table
             await task.setEquipe(users);
         }
 
@@ -131,7 +126,6 @@ const updateTask = async (req, res) => {
             return res.status(400).json({ message: "La date de début doit être antérieure à la date de fin." });
         }
 
-        // Update the task with the new data
         Object.assign(task, {
             titre,
             statut,

@@ -12,9 +12,6 @@ const tache = sequelize.define('tache', {
         type: DataTypes.STRING(30),
         allowNull: false,
     },
-    equipe: {
-        type: DataTypes.JSON,
-    },
     statut: {
         type: DataTypes.STRING(11),
         allowNull: false,
