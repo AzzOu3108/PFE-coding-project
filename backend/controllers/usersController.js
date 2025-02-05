@@ -107,7 +107,8 @@ const updateUserRole = async (req, res) => {
 };
 
 const updateUser = async (req, res) => {
-    const { id, matricule, nom_complet, adresse_email, mot_de_passe, numero_telephone, departement } = req.body;
+    const id = req.params
+    const {matricule, nom_complet, adresse_email, mot_de_passe, numero_telephone, departement } = req.body;
 
     if (!id) {
         return res.status(400).json({ message: "L'ID de l'utilisateur est requis" });

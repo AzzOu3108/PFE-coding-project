@@ -1,33 +1,33 @@
 const { request } = require('express');
+const {sequelize} = require('../config/DB')
 const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur } = require("../models");
 
 const getAllProjects = async (req, res) => {
-    
     try {
         const projects = await projet.findAll({
             include: [
                 {
                     model: tache,
-                    through: { attributes: [] },
+                    through: { attributes: [] }, 
                     as: 'taches',
-                    attributes: ['titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'],
-                    
+                    attributes: ['titre', 'statut', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'],
                     include: [{
                         model: utilisateur,
-                        through: { attributes: [] },
+                        through: { attributes: [] }, 
                         as: "utilisateurs",
                         attributes: ['nom_complet']
-                    }], 
+                    }],
                 },
-            ], attributes: {exclude :['id']}
+            ],
+            attributes: { exclude: ['id'] },
         });
-        // Manually rename "utilisateurs" to "equipe"
+
         const Projets = projects.map(project => ({
             ...project.toJSON(),
             taches: project.taches.map(task => ({
                 ...task.toJSON(),
                 equipe: task.utilisateurs.map(user => user.nom_complet),
-                utilisateurs: undefined 
+                utilisateurs: undefined,
             }))
         }));
 
@@ -41,6 +41,7 @@ const getAllProjects = async (req, res) => {
         res.status(500).json({ message: "Erreur du serveur." });
     }
 };
+
 
 const getProjectByName = async (req, res) => {
     const { nom_de_projet } = req.query;
@@ -58,11 +59,11 @@ const getProjectByName = async (req, res) => {
                     model: tache,
                     through: { attributes: [] },
                     as: 'taches',
-                    attributes: ['titre', 'statut', 'equipe', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'],
+                    attributes: ['titre', 'statut', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'], // Exclude 'equipe' from here if it's not in the table anymore
                     include: [{
                         model: utilisateur,
                         through: { attributes: [] },
-                        as: "utilisateurs",
+                        as: "utilisateurs", 
                         attributes: ['nom_complet']
                     }],
                 },
@@ -73,12 +74,13 @@ const getProjectByName = async (req, res) => {
             return res.status(404).json({ message: "Aucun projet correspondant." });
         }
 
+       
         const Projet = {
             ...project.toJSON(),
             taches: project.taches.map(task => ({
                 ...task.toJSON(),
-                equipe: task.utilisateurs.map(user => user.nom_complet),
-                utilisateurs: undefined 
+                equipe: task.utilisateurs.map(user => user.nom_complet), 
+                utilisateurs: undefined, 
             }))
         };
 
@@ -88,6 +90,7 @@ const getProjectByName = async (req, res) => {
         res.status(500).json({ message: "Erreur du serveur." });
     }
 };
+
 
 const createProject = async (req, res) => {
     // TODO: Extracting req.userId from Token ki tlha9 l auth and Authorization
@@ -184,9 +187,9 @@ const updateProject = async (req, res) => {
     }
 };
 
+// TODO: Extracting req.userId from Token ki tlha9 l auth and Authorization
 const deleteProject = async (req, res) => {
     const { id } = req.params;
-     // TODO: Extracting req.userId from Token ki tlha9 l auth and Authorization
     const { utilisateur_id } = req.body;
 
     try {
@@ -201,24 +204,41 @@ const deleteProject = async (req, res) => {
             return res.status(404).json({ message: "Projet introuvable ou vous n'avez pas la permission de supprimer ce projet." });
         }
 
+        const taskIds = await tache_projet.findAll({
+            where: { projet_id: id },
+            attributes: ['tache_id']
+        });
+
+        const tasksToDelete = taskIds.map(task => task.tache_id);
+
+        await tache_projet.destroy({
+            where: { projet_id: id }
+        });
+
+        await tache_utilisateur.destroy({
+            where: { tache_id: tasksToDelete }
+        });
+
+        await tache.destroy({
+            where: { id: tasksToDelete }
+        });
+
         await projet_utilisateur.destroy({
-            where: {
-                projet_id: id
-            }
+            where: { projet_id: id }
         });
 
         await projet.destroy({
-            where: {
-                id: id
-            }
+            where: { id: id }
         });
 
         res.status(200).json({ message: "Projet supprimé avec succès." });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur du serveur." });
     }
 };
+
 
 module.exports = {
     getAllProjects,

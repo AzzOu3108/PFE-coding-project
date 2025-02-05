@@ -30,7 +30,6 @@ utilisateur.belongsToMany(tache, {
     as: 'taches'
 });
 
-// Define associations
 projet.belongsToMany(utilisateur, {
     through: 'projet_utilisateur',
     foreignKey: 'projet_id',
@@ -41,6 +40,7 @@ projet.belongsToMany(tache, {
     through: 'tache_projet',
     foreignKey: 'projet_id',
     as: 'taches',
+    onDelete: 'CASCADE'
 });
 
 tache.belongsToMany(utilisateur, {
@@ -53,6 +53,34 @@ tache.belongsToMany(projet, {
     through: 'tache_projet',
     foreignKey: 'tache_id',
     as: 'projets',
+    onDelete: 'CASCADE'
+});
+
+tache_projet.belongsTo(tache, { 
+    foreignKey: 'tache_id', 
+    onDelete: 'CASCADE' 
+});
+tache_projet.belongsTo(projet, { 
+    foreignKey: 'projet_id', 
+    onDelete: 'CASCADE' 
+});
+
+tache_utilisateur.belongsTo(tache, { 
+    foreignKey: 'tache_id', 
+    onDelete: 'CASCADE' 
+});
+tache_utilisateur.belongsTo(utilisateur, { 
+    foreignKey: 'utilisateur_id', 
+    onDelete: 'CASCADE' 
+});
+
+projet_utilisateur.belongsTo(projet, { 
+    foreignKey: 'projet_id', 
+    onDelete: 'CASCADE' 
+});
+projet_utilisateur.belongsTo(utilisateur, { 
+    foreignKey: 'utilisateur_id', 
+    onDelete: 'CASCADE' 
 });
 
 module.exports = {
