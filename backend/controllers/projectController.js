@@ -1,5 +1,4 @@
-const { request } = require('express');
-const {sequelize} = require('../config/DB')
+const { request } = require('express')
 const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur } = require("../models");
 
 const getAllProjects = async (req, res) => {

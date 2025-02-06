@@ -1,30 +1,5 @@
 const { tache, projet, utilisateur, tache_utilisateur, tache_projet } = require("../models");
 
-// Get all tasks for a project, including join tables
-const getAllTasks = async (req, res) => {
-    const { projet_id } = req.params;
-
-    try {
-        const tasks = await tache.findAll({
-            where: { projet_id },
-            include: [
-                { model: projet, attributes: ['nom_de_projet'], as:'projets' },
-                { model: utilisateur, attributes: ['nom_complet'], through: { model: tache_utilisateur }, as: 'utilisateurs' }, 
-                { model: tache_projet, attributes: ['projet_id'], where: { projet_id }, required: false },
-            ],
-        });
-
-        if (!tasks.length) {
-            return res.status(404).json({ message: "Aucune tâche disponible pour ce projet." });
-        }
-
-        res.status(200).json({ tasks });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erreur du serveur." });
-    }
-};
-
 // Create a new task and assign users with join table
 const createTask = async (req, res) => {
     const { titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids, projet_id } = req.body;
