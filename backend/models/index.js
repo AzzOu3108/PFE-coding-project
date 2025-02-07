@@ -21,13 +21,15 @@ role.hasOne(utilisateur, {
 utilisateur.belongsToMany(projet, {
     through: 'projet_utilisateur',
     foreignKey: 'utilisateur_id',
-    as: 'projets'
+    as: 'projets',
+    onDelete: 'CASCADE'
 });
 
 utilisateur.belongsToMany(tache, {
     through: 'tache_utilisateur',
     foreignKey: 'utilisateur_id',
-    as: 'taches'
+    as: 'taches',
+    onDelete: 'CASCADE'
 });
 
 projet.belongsToMany(utilisateur, {

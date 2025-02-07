@@ -2,6 +2,7 @@ const { where } = require('sequelize');
 const utilisateur = require('../models/users');
 const role = require('../models/roles');
 const bcrypt = require('bcryptjs');
+const { tache_utilisateur, projet_utilisateur } = require('../models');
 
 const getAllUser = async (req, res) => {
     try {
@@ -146,6 +147,14 @@ const deleteUser = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'Utilisateur introuvable' });
         }
+
+        await tache_utilisateur.destroy({
+            where: { utilisateur_id: id }
+        });
+
+        await projet_utilisateur.destroy({
+            where: { utilisateur_id: id }
+        })
 
         await user.destroy();
         res.status(200).json({ message: 'Utilisateur supprimé avec succès' });
