@@ -3,7 +3,6 @@ const { tache, projet, utilisateur, tache_utilisateur, tache_projet } = require(
 // Create a new task and assign users with join table
 const createTask = async (req, res) => {
     const { titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids, projet_id } = req.body;
-    // console.log("Received data:", req.body); //! test
 
     if (!titre || !equipe || !statut || !date_de_debut_tache || !date_de_fin_tache || !poids || !projet_id) {
         return res.status(400).json({ message: "Veuillez remplir tous les champs." });
@@ -25,12 +24,11 @@ const createTask = async (req, res) => {
         }
 
         const users = await utilisateur.findAll({where:{nom_complet: equipe}})
-        // console.log("Found users:", users); //! test
 
         if(users.length !== equipe.length){
             return res.status(404).json({message: "Un ou plusieurs utilisateurs n'existent pas"})
         }
-        // console.log("All users found, creating the task...");//! test
+
         const newTask = await tache.create({
             titre,
             statut,
@@ -94,7 +92,7 @@ const updateTask = async (req, res) => {
                 return res.status(404).json({ message: "Aucun utilisateur trouvé." });
             }
 
-            await task.setEquipe(users);
+            await task.setUtilisateurs(users);
         }
 
         if (date_de_debut_tache && date_de_fin_tache && new Date(date_de_debut_tache) >= new Date(date_de_fin_tache)) {
@@ -133,6 +131,14 @@ const deleteTask = async (req, res) => {
         if (!task) {
             return res.status(404).json({ message: "Tâche introuvable." });
         }
+
+        await tache_projet.destroy({
+            where:{ tache_id: id }
+        });
+
+        await tache_utilisateur.destroy({
+            where: { tache_id : id }
+        });
 
         await task.destroy();
 
