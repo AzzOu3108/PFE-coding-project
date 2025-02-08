@@ -10,6 +10,9 @@ const role = sequelize.define('roles',{
       role_name: {
         type: DataTypes.STRING(50),
         allowNull: false,
+        validate: {
+          isIn: [['utilisateur', 'chef de projet', 'administrateur', 'directeur']],
+      },
       },
 },{
     tableName: 'roles',
