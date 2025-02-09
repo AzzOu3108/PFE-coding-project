@@ -100,5 +100,6 @@ module.exports = {
     role,
     tache_utilisateur,
     tache_projet,
-    projet_utilisateur
+    projet_utilisateur,
+    refreshToken
 };
