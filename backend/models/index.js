@@ -6,6 +6,7 @@ const role = require('./roles');
 const tache_utilisateur = require('./tache_utilisateur');
 const tache_projet = require('./tache_projet');
 const projet_utilisateur = require('./projet_utilisateur');
+const refreshToken = require('./refreshToken')
 
 // Associations
 utilisateur.belongsTo(role, {
@@ -84,6 +85,12 @@ projet_utilisateur.belongsTo(utilisateur, {
     foreignKey: 'utilisateur_id', 
     onDelete: 'CASCADE' 
 });
+
+// refreshToken association
+refreshToken.belongsTo(utilisateur,{
+    foreignKey: 'utilisateur_id',
+    onDelete: "CASCADE"
+})
 
 module.exports = {
     sequelize,
