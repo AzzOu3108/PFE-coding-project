@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/DB')
 
-const refreshToken = sequelize.define('refreshToken',{
+const refreshtoken = sequelize.define('refreshtoken',{
     id:{
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -15,6 +15,7 @@ const refreshToken = sequelize.define('refreshToken',{
     utilisateur_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        unique: true,
         references: {
             model: 'utilisateur',
             key: 'id',
@@ -28,4 +29,4 @@ const refreshToken = sequelize.define('refreshToken',{
     timestamps: true
 });
 
-module.exports = refreshToken
+module.exports = refreshtoken
