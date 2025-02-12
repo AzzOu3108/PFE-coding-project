@@ -14,6 +14,7 @@ app.use(cors(corsOptions))
 
 app.use(express.json())
 
+app.use('/auth', require('./routes/authRouter'))
 app.use('/utilisateur', require('./routes/userRoutes'))
 app.use('/projet', require('./routes/projectRouter'))
 app.use('/tache', require('./routes/taskRouter'))
