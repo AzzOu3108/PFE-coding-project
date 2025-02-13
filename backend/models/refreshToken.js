@@ -26,6 +26,7 @@ const refreshtoken = sequelize.define('refreshtoken',{
         allowNull: false
     }
 }, {
+    tableName: "refreshtoken",
     timestamps: true
 });
 

@@ -20,9 +20,9 @@ const login = async (req, res) => {
         const accessToken = generateToken(user.id, user.role_id, 'access')
         const refreshToken = generateToken(user.id, user.role_id, 'refresh')
 
-        await refreshtoken.upsert({ 
-            utilisateur_id: user.id, 
-            token: refreshToken 
+        await refreshtoken.upsert({
+            utilisateur_id: user.id,
+            token: refreshToken
         })
 
         res.json({ accessToken, refreshToken })
