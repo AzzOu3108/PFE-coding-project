@@ -92,7 +92,7 @@ const getProjectByName = async (req, res) => {
 
 
 const createProject = async (req, res) => {
-    // TODO: Extracting req.userId from Token ki tlha9 l auth and Authorization
+    const userId = req.user.id
     const {
         function_de_projet,
         nom_de_projet,
@@ -145,7 +145,8 @@ const createProject = async (req, res) => {
             objective,
             date_de_debut,
             date_de_fin,
-            buget_global
+            buget_global,
+            created_id: userId
         });
 
         await projet_utilisateur.create({
