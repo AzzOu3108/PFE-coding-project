@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { utilisateur, refreshtoken } = require('../models')
+const { utilisateur, refreshtoken, role } = require('../models')
 const generateToken = require('../utils/generateToken')
 
 const login = async (req, res) => {
