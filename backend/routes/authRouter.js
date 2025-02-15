@@ -1,10 +1,11 @@
 const express = require('express')
 const router = express.Router()
 const authController = require('../controllers/authController');
-const isAuthenticated  = require('../middleware/authMiddleware');
+const { authLimiter } = require('../middleware/rateLimiter')
+const { isAuthenticated }  = require('../middleware/authMiddleware');
 
 router.route('/login')
-    .post(authController.login);
+    .post(authLimiter, authController.login);
 
 router.route('/refresh')
     .post(authController.refreshToken);

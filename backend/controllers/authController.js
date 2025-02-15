@@ -11,14 +11,17 @@ const login = async (req, res) => {
     }
 
     try {
-        const user = await utilisateur.findOne({ where: { adresse_email } })
+        const user = await utilisateur.findOne({ 
+            where: { adresse_email },
+            include: { model: role, as: 'role' }
+        })
         if (!user) return res.status(401).json({ message: 'Email ou mot de passe invalide' })
 
         const isMatch = await bcrypt.compare(mot_de_passe, user.mot_de_passe)
         if (!isMatch) return res.status(401).json({ message: 'Email ou mot de passe invalide' })
 
-        const accessToken = generateToken(user.id, user.role_id, 'access')
-        const refreshToken = generateToken(user.id, user.role_id, 'refresh')
+        const accessToken = generateToken(user.id, user.role.role_name, 'access')
+        const refreshToken = generateToken(user.id, user.role.role_name, 'refresh')
 
         await refreshtoken.upsert({
             utilisateur_id: user.id,
@@ -30,7 +33,7 @@ const login = async (req, res) => {
         console.error('Login error:', error)
         res.status(500).json({ message: "Erreur du serveur." })
     }
-}
+};
 
 const refreshToken = async (req, res) => {
     const { refreshToken } = req.body
@@ -53,7 +56,7 @@ const refreshToken = async (req, res) => {
         console.error('Refresh token error:', error)
         res.status(500).json({ message: "Erreur du serveur." })
     }
-}
+};
 
 const logout = async (req, res) => {
     try {
@@ -70,6 +73,6 @@ const logout = async (req, res) => {
         console.error('Logout error:', error)
         res.status(500).json({ message: 'Erreur du serveur.' })
     }
-}
+};
 
 module.exports = { login, refreshToken, logout }

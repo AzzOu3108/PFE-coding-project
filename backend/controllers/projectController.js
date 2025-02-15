@@ -6,6 +6,13 @@ const getAllProjects = async (req, res) => {
         const projects = await projet.findAll({
             include: [
                 {
+                    model: utilisateur,
+                    through: {attributes:[]},
+                    as: 'utilisateur',
+                    where:{ id: req.user.id},
+                    attributes: []
+                },
+                {
                     model: tache,
                     through: { attributes: [] }, 
                     as: 'taches',
@@ -14,7 +21,8 @@ const getAllProjects = async (req, res) => {
                         model: utilisateur,
                         through: { attributes: [] }, 
                         as: "utilisateurs",
-                        attributes: ['nom_complet']
+                        attributes: ['nom_complet'],
+                        where: {id: req.user.id}
                     }],
                 },
             ],
@@ -92,7 +100,7 @@ const getProjectByName = async (req, res) => {
 
 
 const createProject = async (req, res) => {
-    const userId = req.user.id
+    
     const {
         function_de_projet,
         nom_de_projet,
@@ -105,7 +113,6 @@ const createProject = async (req, res) => {
         date_de_debut,
         date_de_fin,
         buget_global,
-        utilisateur_id
     } = req.body;
 
     if (!nom_de_projet || 
@@ -117,8 +124,8 @@ const createProject = async (req, res) => {
         !objective || 
         !date_de_debut || 
         !date_de_fin || 
-        !buget_global ||
-        !utilisateur_id) {
+        !buget_global
+    ) {
         return res.status(400).json({ message: "Veuillez remplir tous les champs obligatoires." });
     }
 
@@ -127,13 +134,12 @@ const createProject = async (req, res) => {
     }
 
     try {
-        // Check if project already exists
+        
         const existingProject = await projet.findOne({ where: { nom_de_projet } });
         if (existingProject) {
             return res.status(409).json({ message: "Ce projet existe déjà." });
         }
 
-        // Create the project
         const newProject = await projet.create({
             function_de_projet,
             nom_programme,
@@ -146,12 +152,12 @@ const createProject = async (req, res) => {
             date_de_debut,
             date_de_fin,
             buget_global,
-            created_id: userId
+           
         });
 
         await projet_utilisateur.create({
             projet_id: newProject.id,
-            utilisateur_id
+            utilisateur_id: req.user.id
         })
 
         res.status(201).json({ message: "Projet créé avec succès.", newProject });
