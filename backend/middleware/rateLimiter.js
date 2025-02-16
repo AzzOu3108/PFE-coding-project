@@ -5,7 +5,7 @@ const authLimiter = rateLimit({
     max: 5,
     standardHeaders: true,
     legacyHeaders: false,
-    message: 'Trop de tentatives de connexion, veuillez réessayer après 15 minutes',
+    message: 'Trop de tentatives de connexion, veuillez réessayer après 10 minutes',
     skipSuccessfulRequests: true 
 });
 

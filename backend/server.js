@@ -6,7 +6,10 @@ const path = require('path')
 const {logger} = require('./middleware/logger')
 const cors = require('cors')
 const corsOptions = require('./config/corsOptions')
+const {apiLimiter} = require('./middleware/rateLimiter')
 const PORT = process.env.PORT || 8000
+
+app.use(apiLimiter)
 
 app.use(logger)
 
