@@ -1,18 +1,19 @@
 const express = require('express')
 const router = express.Router()
 const usersController = require('../controllers/usersController')
+const { isAuthenticated, isAuthorized } = require('../middleware/authMiddleware')
 
 router.route('/')
-    .post(usersController.createNewUser)
-    .get(usersController.getAllUser)
+    .post(isAuthenticated, usersController.createNewUser)
+    .get(isAuthenticated, isAuthorized(['administrateur', 'directeur']),usersController.getAllUser)
     
 router.route('/search')
-    .get(usersController.getUserByName)
+    .get(isAuthenticated, usersController.getUserByName)
 
 router.route('/:id')
-    .put(usersController.updateUser)
-    .delete(usersController.deleteUser)
+    .put(isAuthenticated, usersController.updateUser)
+    .delete(isAuthenticated, isAuthorized(['administrateur']), usersController.deleteUser)
 
-router.put('/:id/role', usersController.updateUserRole);
+router.put('/:id/role', isAuthenticated, isAuthorized(['administrateur']), usersController.updateUserRole);
 
 module.exports = router

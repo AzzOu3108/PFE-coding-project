@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const {utilisateur, role} = require('../models')
-const dotenv = require('dotenv');
-dotenv.config();
+require('dotenv').config()
 
 const isAuthenticated = async (req, res, next) => {
     const token = req.header('Authorization');
@@ -47,11 +46,10 @@ const isAuthenticated = async (req, res, next) => {
     }
 };
 
-
 const isAuthorized = (allowedRoles) => {
     return (req, res, next) => {
         if (!req.user || !allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({ message: "Vous n'avez pas l'autorisation pour effectuer cette action." });
+            return res.status(403).json({ message: "Action non autorisée" });
         }
         next();
     };

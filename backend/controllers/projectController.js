@@ -8,7 +8,7 @@ const getAllProjects = async (req, res) => {
                 {
                     model: utilisateur,
                     through: {attributes:[]},
-                    as: 'utilisateur',
+                    as: 'utilisateurs',
                     where:{ id: req.user.id},
                     attributes: []
                 },

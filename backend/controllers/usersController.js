@@ -1,8 +1,7 @@
 const { where } = require('sequelize');
-const utilisateur = require('../models/users');
 const role = require('../models/roles');
 const bcrypt = require('bcryptjs');
-const { tache_utilisateur, projet_utilisateur } = require('../models');
+const { tache_utilisateur, projet_utilisateur, utilisateur } = require('../models');
 
 const getAllUser = async (req, res) => {
     try {
