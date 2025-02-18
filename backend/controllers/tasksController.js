@@ -66,12 +66,29 @@ const updateTask = async (req, res) => {
     const { id } = req.params;
     const { titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids, projet_id } = req.body;
 
+    try {
     if (!id) {
-        return res.status(400).json({ message: "L'ID de la tâche est requis dans l'URL." });
+        return res.status(400).json({ message: "L'ID de la tâche est requis." });
     }
 
-    try {
-        const task = await tache.findByPk(id);
+    const currentUserRole = req.user.role;
+
+        const task = await tache.findByPk(id, {
+            include:[{
+                model: utilisateur,
+                as: 'utilisteurs',
+                through: {
+                    attributes: []
+                }
+            }]
+        });
+
+        const validStatuses = ['A faire', 'En cours', 'Terminée', 'En attente', 'Annulée'];
+
+        if(statut && !validStatuses.includes(statut)){
+            return res.status(400).json({ message: "Statut de tâche non valide." });
+        }
+        
         if (!task) {
             return res.status(404).json({ message: "Tâche introuvable." });
         }
