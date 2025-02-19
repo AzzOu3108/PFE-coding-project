@@ -26,7 +26,6 @@ const getAllProjects = async (req, res) => {
                     }],
                 },
             ],
-            attributes: { exclude: ['id'] },
         });
 
         const Projets = projects.map(project => ({
@@ -60,7 +59,6 @@ const getProjectByName = async (req, res) => {
     try {
         const project = await projet.findOne({
             where: { nom_de_projet },
-            attributes: { exclude: ['id'] },
             include: [
                 {
                     model: tache,
