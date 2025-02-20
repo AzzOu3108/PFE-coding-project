@@ -22,7 +22,6 @@ const getAllProjects = async (req, res) => {
                         through: { attributes: [] }, 
                         as: "utilisateurs",
                         attributes: ['nom_complet'],
-                        where: {id: req.user.id}
                     }],
                 },
             ],

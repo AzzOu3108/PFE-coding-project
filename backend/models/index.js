@@ -37,6 +37,7 @@ projet.belongsToMany(utilisateur, {
     through: 'projet_utilisateur',
     foreignKey: 'projet_id',
     as: 'utilisateurs',
+    onDelete: 'CASCADE'
 });
 
 projet.belongsToMany(tache, {
@@ -50,6 +51,7 @@ tache.belongsToMany(utilisateur, {
     through: 'tache_utilisateur',
     foreignKey: 'tache_id',
     as: 'utilisateurs',
+    onDelete: 'CASCADE'
 });
 
 tache.belongsToMany(projet, {

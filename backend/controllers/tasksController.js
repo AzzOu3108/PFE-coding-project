@@ -3,10 +3,10 @@ const { tache, projet, utilisateur, tache_utilisateur, tache_projet } = require(
 
 
 const createTask = async (req, res) => {
-    const projet_id = req.params.projectId;
-    const { titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids} = req.body;
+    const projet_id = req.project.id;
+    const { titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids } = req.body;
 
-    if (!titre || !equipe || !statut || !date_de_debut_tache || !date_de_fin_tache || !poids || !projet_id) {
+    if (!titre || !equipe || !statut || !date_de_debut_tache || !date_de_fin_tache || !poids) {
         return res.status(400).json({ message: "Veuillez remplir tous les champs." });
     }
 
@@ -15,39 +15,36 @@ const createTask = async (req, res) => {
     }
 
     try {
-
-        if(req.user.role === 'chef de projet' || req.user.role === 'administrateur'){
-            const isLead = await validateProjectExiste(req.user.id, projet_id);
-            if(!isLead){
+        // Authorization check
+        if (req.user.role === 'Chef de Projet') {
+            const isLead = await verifyProjectLeadership(req.user.id, projet_id);
+            if (!isLead) {
                 return res.status(403).json({ message: "Vous n'êtes pas responsable de ce projet" });
             }
         }
 
-        const existingtask = await tache.findOne({where:{titre}});
-        if(existingtask){
-            return res.status(409).json({message: "la tâche existe déjà"})
+        // Existing task check
+        const existingtask = await tache.findOne({ where: { titre } });
+        if (existingtask) {
+            return res.status(409).json({ message: "La tâche existe déjà" });
         }
 
-        const project = await projet.findByPk(projet_id);
-        if (!project) {
-            return res.status(404).json({ message: "Projet introuvable." });
+        // User validation
+        const users = await utilisateur.findAll({ where: { nom_complet: equipe } });
+        if (users.length !== equipe.length) {
+            return res.status(404).json({ message: "Un ou plusieurs utilisateurs n'existent pas" });
         }
 
-        const users = await utilisateur.findAll({where:{nom_complet: equipe}})
-
-        if(users.length !== equipe.length){
-            return res.status(404).json({message: "Un ou plusieurs utilisateurs n'existent pas"})
-        }
-
+        // Create task
         const newTask = await tache.create({
             titre,
             statut,
             date_de_debut_tache,
             date_de_fin_tache,
-            poids,
-            projet_id,
+            poids
         });
 
+        // Create associations
         await tache_projet.create({
             tache_id: newTask.id,
             projet_id: projet_id
@@ -57,14 +54,14 @@ const createTask = async (req, res) => {
             utilisateur_id: user.id,
             tache_id: newTask.id
         }));
-        
-        await tache_utilisateur.bulkCreate(userTaskEntries); 
+        await tache_utilisateur.bulkCreate(userTaskEntries);
 
         res.status(201).json({
-        message: "Tâche créée avec succès",
-        tache: newTask,
-        equipe: users.length > 0 ? users.map(user => user.nom_complet) : "Aucune équipe assignée"
-    });
+            message: "Tâche créée avec succès",
+            tache: newTask,
+            equipe: users.map(user => user.nom_complet)
+        });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur du serveur." });

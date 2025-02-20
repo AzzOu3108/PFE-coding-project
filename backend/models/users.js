@@ -45,6 +45,21 @@ const utilisateur = sequelize.define('utilisateur', {
 },{
     tableName:'utilisateur',
     timestamps: false
-})
+});
+
+utilisateur.afterDestroy(async (user) =>{
+    try {
+        const tasks = await user.getTaches();
+
+        for(const task of tasks) {
+            const remainingUsers = await task.countUtilisateurs()
+            if(remainingUsers === 0){
+                await task.destroy();
+            }
+        }
+    } catch (error) {
+        console.error('Error in afterDestroy hook:', error);
+    }
+});
 
 module.exports = utilisateur

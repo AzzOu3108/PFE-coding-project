@@ -43,4 +43,19 @@ const tache = sequelize.define('tache', {
     timestamps: false,
 });
 
+tache.afterDestroy(async (user) =>{
+    try {
+        const project = await task.getTaches();
+
+        if(project) {
+            const remainingUsers = await project.countUtilisateurs()
+            if(remainingUsers === 0){
+                await project.destroy();
+            }
+        }
+    } catch (error) {
+        console.error('Error in afterDestroy hook:', error);
+    }
+});
+
 module.exports = tache;

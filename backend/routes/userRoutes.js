@@ -4,7 +4,7 @@ const usersController = require('../controllers/usersController')
 const { isAuthenticated, isAuthorized } = require('../middleware/authMiddleware')
 
 router.route('/')
-    .post(isAuthenticated, usersController.createNewUser)
+    .post(usersController.createNewUser)
     .get(isAuthenticated, isAuthorized(['administrateur', 'directeur']),usersController.getAllUser)
     
 router.route('/search')
