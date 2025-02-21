@@ -10,12 +10,16 @@ const createTask = async (req, res) => {
         return res.status(400).json({ message: "Veuillez remplir tous les champs." });
     }
 
+    if (equipe.length === 0) {
+        return res.status(400).json({ message: "Vous devez assigner la tâche à au moins un utilisateur." });
+    }
+
     if (new Date(date_de_debut_tache) >= new Date(date_de_fin_tache)) {
         return res.status(400).json({ message: "La date de début doit être antérieure à la date de fin." });
     }
 
     try {
-        // Authorization check
+        
         if (req.user.role === 'Chef de Projet') {
             const isLead = await verifyProjectLeadership(req.user.id, projet_id);
             if (!isLead) {
@@ -23,19 +27,16 @@ const createTask = async (req, res) => {
             }
         }
 
-        // Existing task check
         const existingtask = await tache.findOne({ where: { titre } });
         if (existingtask) {
             return res.status(409).json({ message: "La tâche existe déjà" });
         }
 
-        // User validation
         const users = await utilisateur.findAll({ where: { nom_complet: equipe } });
         if (users.length !== equipe.length) {
             return res.status(404).json({ message: "Un ou plusieurs utilisateurs n'existent pas" });
         }
 
-        // Create task
         const newTask = await tache.create({
             titre,
             statut,
@@ -44,7 +45,6 @@ const createTask = async (req, res) => {
             poids
         });
 
-        // Create associations
         await tache_projet.create({
             tache_id: newTask.id,
             projet_id: projet_id
@@ -70,78 +70,101 @@ const createTask = async (req, res) => {
 
 
 const updateTask = async (req, res) => {
-        const { id } = req.params;
-        const { titre, equipe, date_de_debut_tache, date_de_fin_tache, poids, projet_id } = req.body;
-    
-        try {
-            if (!id) {
-                return res.status(400).json({ message: "L'ID de la tâche est requis." });
-            }
-    
-            const currentUserRole = req.user.role;
-    
-            const task = await tache.findByPk(id, {
-                include: [{
-                    model: utilisateur,
-                    as: 'utilisateurs',
-                    through: { attributes: [] }
-                }]
-            });
-    
-            if (!task) {
-                return res.status(404).json({ message: "Tâche introuvable." });
-            }
-    
-            if (projet_id) {
-                const projectExists = await projet.findByPk(projet_id);
-                if (!projectExists) {
-                    return res.status(404).json({ message: "Projet introuvable." });
-                }
-            }
-    
-            if (equipe) {
-                const teamMembers = Array.isArray(equipe) ? equipe : [equipe];
-    
-                const users = await utilisateur.findAll({
-                    where: { nom_complet: equipe }
-                });
-    
-                if (users.length !== teamMembers.length) {
-                    const missingUsers = teamMembers.filter(id =>
-                        !users.some(user => user.id === id)
-                    );
-                    return res.status(404).json({ message: `Utilisateurs non trouvés: ${missingUsers.join(', ')}` });
-                }
-    
-                if (currentUserRole === 'Chef de Projet') {
-                    const isProjetLead = await verifyProjectLeadership(req.user.id, task.projet_id);
-                    if (!isProjetLead) {
-                        return res.status(403).json({ message: "Vous n'êtes pas responsable de ce projet." });
-                    }
-                }
-    
-                await task.setUtilisateurs(users);
-            }
-    
-            if (date_de_debut_tache && date_de_fin_tache && new Date(date_de_debut_tache) >= new Date(date_de_fin_tache)) {
-                return res.status(400).json({ message: "La date de début doit être antérieure à la date de fin." });
-            }
-    
-            Object.assign(task, {
-                titre,
-                date_de_debut_tache,
-                date_de_fin_tache,
-                poids,
-                projet_id,
-            });
-    
-            await task.save();
-    
-            res.status(200).json({ message: "Tâche mise à jour avec succès.", task });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: "Erreur du serveur." });
+    const { id } = req.params; // Task ID from the URL
+    const { projectId } = req.params; // Project ID from the URL
+    const { titre, equipe, date_de_debut_tache, date_de_fin_tache, poids } = req.body;
+
+    try {
+        if (!id || !projectId) {
+            return res.status(400).json({ message: "L'ID de la tâche et du projet sont requis." });
         }
+
+        // Fetch the project
+        const project = await projet.findByPk(projectId);
+        if (!project) {
+            return res.status(404).json({ message: "Projet introuvable." });
+        }
+
+        // Find the task by ID
+        const task = await tache.findByPk(id, {
+            include: [
+                {
+                    model: utilisateur,
+                    as: 'utilisateurs', // Correct alias for utilisateurs
+                    through: { attributes: [] }
+                },
+                {
+                    model: projet,
+                    as: 'projets' // Correct alias for projets
+                }
+            ]
+        });
+
+        if (!task) {
+            return res.status(404).json({ message: "Tâche introuvable." });
+        }
+
+        if (equipe) {
+            if (equipe.length === 0) {
+                if (task.utilisateurs.length === 0) {
+                    // Delete related records in tache_projet first
+                    await tache_projet.destroy({ where: { tache_id: id } });
+
+                    // Now delete the task
+                    await task.destroy();
+
+                    // Check if the project has any remaining tasks
+                    const remainingTasks = await tache_projet.count({ where: { projet_id: projectId } });
+                    if (remainingTasks === 0) {
+                        await projet.destroy({ where: { id: projectId } });
+                        return res.status(200).json({ message: "Tâche et projet supprimés car il n'y a plus de tâches." });
+                    }
+
+                    return res.status(200).json({ message: "Tâche supprimée car il n'y a plus d'utilisateurs." });
+                } else {
+                    return res.status(400).json({ message: "Vous devez assigner la tâche à au moins un utilisateur." });
+                }
+            }
+
+            const users = await utilisateur.findAll({ where: { nom_complet: equipe } });
+
+            const missingUsers = equipe.filter(userName =>
+                !users.some(user => user.nom_complet === userName)
+            );
+
+            if (missingUsers.length > 0) {
+                return res.status(404).json({ message: `Utilisateurs non trouvés: ${missingUsers.join(', ')}` });
+            }
+
+            if (req.user.role === 'Chef de Projet') {
+                const isProjetLead = await verifyProjectLeadership(req.user.id, projectId);
+                if (!isProjetLead) {
+                    return res.status(403).json({ message: "Vous n'êtes pas responsable de ce projet." });
+                }
+            }
+
+            await task.setUtilisateurs(users);
+        }
+
+        if (date_de_debut_tache && date_de_fin_tache && new Date(date_de_debut_tache) >= new Date(date_de_fin_tache)) {
+            return res.status(400).json({ message: "La date de début doit être antérieure à la date de fin." });
+        }
+
+        Object.assign(task, {
+            titre,
+            date_de_debut_tache,
+            date_de_fin_tache,
+            poids,
+            projet_id: projectId,
+        });
+
+        await task.save();
+
+        res.status(200).json({ message: "Tâche mise à jour avec succès.", task });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur du serveur." });
+    }
 };
 
 

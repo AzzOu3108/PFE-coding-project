@@ -4,13 +4,13 @@ const tasksController = require('../controllers/tasksController')
 const { isAuthenticated, isAuthorized } = require('../middleware/authMiddleware')
 const validateProjectExiste = require('../middleware/validateProjectExiste')
 
-router.route('/projects/:projectId/tasks')
+router.route('/projet/:projectId')
     .post(isAuthenticated,
         isAuthorized(['chef de projet', 'administrateur']),
         validateProjectExiste,
         tasksController.createTask)
 
-router.route('/:id')
+router.route('/:id/:projectId')
     .put(isAuthenticated,
         isAuthorized(['chef de projet', 'administrateur']), 
         tasksController.updateTask)

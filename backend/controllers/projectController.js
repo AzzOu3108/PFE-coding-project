@@ -63,7 +63,7 @@ const getProjectByName = async (req, res) => {
                     model: tache,
                     through: { attributes: [] },
                     as: 'taches',
-                    attributes: ['titre', 'statut', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'], // Exclude 'equipe' from here if it's not in the table anymore
+                    attributes: ['titre', 'statut', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'],
                     include: [{
                         model: utilisateur,
                         through: { attributes: [] },
