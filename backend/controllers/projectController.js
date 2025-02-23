@@ -1,17 +1,23 @@
-const { request } = require('express')
 const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur } = require("../models");
 
 const getAllProjects = async (req, res) => {
     try {
+        const includeUser = {
+            model: utilisateur,
+            through: { attributes: [] },
+            as: 'utilisateurs',
+            attributes: ['nom_complet'],
+            ...(req.user && req.user.role && 
+                (req.user.role !== 'administrateur' && req.user.role !== 'directeur')
+                ? { where: { id: req.user.id } }
+                : {}
+            )
+        };
+
         const projects = await projet.findAll({
             include: [
-                {
-                    model: utilisateur,
-                    through: {attributes:[]},
-                    as: 'utilisateurs',
-                    where:{ id: req.user.id},
-                    attributes: []
-                },
+                includeUser,
+                
                 {
                     model: tache,
                     through: { attributes: [] }, 
