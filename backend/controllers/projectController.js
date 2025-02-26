@@ -3,6 +3,8 @@ const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_util
 const getAllProjects = async (req, res) => {
     try {
         const allowRoles = ['administrateur', 'directeur'];
+        const isUtilisateur = req.user && req.user.role === 'utilisateur';
+
         const includeUser = {
             model: utilisateur,
             through: { attributes: [] },
@@ -10,8 +12,7 @@ const getAllProjects = async (req, res) => {
             attributes: ['nom_complet'],
             ...(req.user && req.user.role && !allowRoles.includes(req.user.role))
                 ? { where: { id: req.user.id } }
-                : {}
-            
+                : {}    
         };
 
         const projects = await projet.findAll({
