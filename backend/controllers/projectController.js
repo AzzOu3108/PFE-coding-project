@@ -1,24 +1,18 @@
 const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur } = require("../models");
+const { trace } = require("../routes/projectRouter");
 
 const getAllProjects = async (req, res) => {
     try {
-        const allowRoles = ['administrateur', 'directeur'];
-        const isUtilisateur = req.user && req.user.role === 'utilisateur';
-
         const includeUser = {
             model: utilisateur,
             through: { attributes: [] },
             as: 'utilisateurs',
-            attributes: ['nom_complet'],
-            ...(req.user && req.user.role && !allowRoles.includes(req.user.role))
-                ? { where: { id: req.user.id } }
-                : {}    
+            attributes: ['nom_complet']
         };
 
         const projects = await projet.findAll({
             include: [
                 includeUser,
-                
                 {
                     model: tache,
                     through: { attributes: [] }, 
@@ -48,6 +42,16 @@ const getAllProjects = async (req, res) => {
         }
 
         res.status(200).json({ Projets });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur du serveur." });
+    }
+};
+
+
+const getProjectsByRole = async (req, res) => {
+    try {
+        
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur du serveur." });
