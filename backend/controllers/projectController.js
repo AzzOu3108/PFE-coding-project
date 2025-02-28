@@ -1,5 +1,4 @@
 const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur } = require("../models");
-const { trace } = require("../routes/projectRouter");
 
 const getAllProjects = async (req, res) => {
     try {
@@ -51,10 +50,105 @@ const getAllProjects = async (req, res) => {
 
 const getProjectsByRole = async (req, res) => {
     try {
-        
+        const user = req.user;
+        if (!user) {
+            return res.status(401).json({ message: "Non authentifié" });
+        }
+
+        // Base include configuration (reused from getAllProjects)
+        const baseIncludes = [
+            {
+                model: utilisateur,
+                through: { attributes: [] },
+                as: 'utilisateurs',
+                attributes: ['nom_complet']
+            },
+            {
+                model: tache,
+                through: { attributes: [] },
+                as: 'taches',
+                attributes: ['titre', 'statut', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'],
+                include: [{
+                    model: utilisateur,
+                    through: { attributes: [] },
+                    as: "utilisateurs",
+                    attributes: ['nom_complet'],
+                }],
+            }
+        ];
+
+        let queryOptions = {
+            include: baseIncludes
+        };
+
+        // Role-based filtering
+        switch (user.role) {
+            case 'administrateur':
+            case 'directeur':
+                // No additional filters - get all projects
+                break;
+
+            case 'chef de projet':
+                queryOptions.where = { createur_id: user.id };
+                queryOptions.include = baseIncludes.map(include => {
+                    if (include.as === 'taches') {
+                        return {
+                            ...include,
+                            where: { createur_id: user.id } // Only tasks they created
+                        };
+                    }
+                    return include;
+                });
+                break;
+
+            case 'utilisateur':
+                queryOptions.include = baseIncludes.map(include => {
+                    if (include.as === 'utilisateurs') {
+                        return {
+                            ...include,
+                            where: { id: user.id },
+                            required: true
+                        };
+                    }
+                    if (include.as === 'taches') {
+                        return {
+                            ...include,
+                            include: [{
+                                ...include.include[0],
+                                where: { id: user.id },
+                                required: true
+                            }]
+                        };
+                    }
+                    return include;
+                });
+                break;
+
+            default:
+                return res.status(403).json({ message: "Accès non autorisé" });
+        }
+
+        const projects = await projet.findAll(queryOptions);
+
+        // Transform results (reused from getAllProjects)
+        const Projets = projects.map(project => ({
+            ...project.toJSON(),
+            taches: project.taches.map(task => ({
+                ...task.toJSON(),
+                equipe: task.utilisateurs.map(user => user.nom_complet),
+                utilisateurs: undefined,
+            }))
+        }));
+
+        if (!projects.length) {
+            return res.status(404).json({ message: "Aucun projet trouvé" });
+        }
+
+        res.status(200).json({ Projets });
+
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Erreur du serveur." });
+        res.status(500).json({ message: "Erreur du serveur" });
     }
 };
 
@@ -257,6 +351,7 @@ const deleteProject = async (req, res) => {
 module.exports = {
     getAllProjects,
     getProjectByName,
+    getProjectsByRole,
     createProject,
     updateProject,
     deleteProject
