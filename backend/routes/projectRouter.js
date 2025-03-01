@@ -7,13 +7,9 @@ router.get('/by-role', isAuthenticated, isAuthorized(['utilisateur', 'chef de pr
 , projectController.getProjectsByRole
 )
 
-// router.route('/by-role')
-//     .get(isAuthenticated, isAuthorized(['utilisateur', 'chef de projet', 'administrateur', 'directeur']
-//         , projectController.getProjectsByRole));
-
 router.route('/')
     .post(isAuthenticated, isAuthorized(['chef de projet', 'administrateur']), projectController.createProject)
-    .get(isAuthenticated,  projectController.getAllProjects);
+    .get(isAuthenticated,  isAuthorized(['utilisateur', 'chef de projet', 'administrateur', 'directeur']), projectController.getAllProjects);
     
 router.route('/search')
     .get(projectController.getProjectByName)

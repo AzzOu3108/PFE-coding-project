@@ -1,49 +1,44 @@
 const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur } = require("../models");
+const { getProjectFilter, getUserInclude, getTaskInclude } = require('../services/projectService')
 
 const getAllProjects = async (req, res) => {
     try {
-        const includeUser = {
-            model: utilisateur,
-            through: { attributes: [] },
-            as: 'utilisateurs',
-            attributes: ['nom_complet']
-        };
-
-        const projects = await projet.findAll({
-            include: [
-                includeUser,
-                {
-                    model: tache,
-                    through: { attributes: [] }, 
-                    as: 'taches',
-                    attributes: ['titre', 'statut', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'],
-                    include: [{
-                        model: utilisateur,
-                        through: { attributes: [] }, 
-                        as: "utilisateurs",
-                        attributes: ['nom_complet'],
-                    }],
-                },
-            ],
-        });
-
-        const Projets = projects.map(project => ({
-            ...project.toJSON(),
-            taches: project.taches.map(task => ({
-                ...task.toJSON(),
-                equipe: task.utilisateurs.map(user => user.nom_complet),
-                utilisateurs: undefined,
-            }))
+      // Get the logged-in user's role and id
+      const userRole = req.user.role;
+      const userId = req.user.id;
+  
+      // Get the filters from the helper file
+      const projectFilter = getProjectFilter(userRole, userId);
+      const userInclude = getUserInclude(userRole, userId, utilisateur);
+      const taskInclude = getTaskInclude(userRole, userId, tache, utilisateur);
+  
+      // Execute the query with the dynamic filters
+      const projects = await projet.findAll({
+        where: projectFilter,
+        include: [
+          userInclude,
+          taskInclude,
+        ],
+      });
+  
+      // Map over the projects to add a computed 'equipe' field in each task.
+      const Projets = projects.map(project => {
+        const projObj = project.toJSON();
+        projObj.taches = projObj.taches.map(task => ({
+          ...task,
+          equipe: task.utilisateurs ? task.utilisateurs.map(user => user.nom_complet) : []
         }));
-
-        if (!projects.length) {
-            return res.status(404).json({ message: "Aucun projet disponible." });
-        }
-
-        res.status(200).json({ Projets });
+        return projObj;
+      });
+  
+      if (!projects.length) {
+        return res.status(404).json({ message: "Aucun projet disponible." });
+      }
+  
+      res.status(200).json({ Projets });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erreur du serveur." });
+      console.error(error);
+      res.status(500).json({ message: "Erreur du serveur." });
     }
 };
 

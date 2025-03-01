@@ -47,6 +47,11 @@ projet.belongsToMany(tache, {
     onDelete: 'CASCADE'
 });
 
+projet.belongsTo(utilisateur, {
+    foreignKey: 'created_by',
+    as: 'creator'
+});
+
 tache.belongsToMany(utilisateur, {
     through: 'tache_utilisateur',
     foreignKey: 'tache_id',

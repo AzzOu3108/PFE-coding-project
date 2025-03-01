@@ -50,7 +50,15 @@ const projet = sequelize.define('projet', {
     buget_global: {
         type: DataTypes.INTEGER(20),
         allowNull: false
-    }
+    },
+    created_by: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'utilisateur',
+          key: 'id'
+        }
+      }
 }, {
     tableName: 'projet',
     timestamps: false
