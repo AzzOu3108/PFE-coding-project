@@ -3,41 +3,47 @@ const { getProjectFilter, getUserInclude, getTaskInclude } = require('../service
 
 const getAllProjects = async (req, res) => {
     try {
-      // Get the logged-in user's role and id
       const userRole = req.user.role;
       const userId = req.user.id;
   
-      // Get the filters from the helper file
       const projectFilter = getProjectFilter(userRole, userId);
-      const userInclude = getUserInclude(userRole, userId, utilisateur);
-      const taskInclude = getTaskInclude(userRole, userId, tache, utilisateur);
+      const userInclude = getUserInclude();
+      const taskInclude = getTaskInclude();
   
-      // Execute the query with the dynamic filters
       const projects = await projet.findAll({
         where: projectFilter,
         include: [
           userInclude,
-          taskInclude,
-        ],
+          taskInclude
+        ]
       });
   
-      // Map over the projects to add a computed 'equipe' field in each task.
       const Projets = projects.map(project => {
         const projObj = project.toJSON();
-        projObj.taches = projObj.taches.map(task => ({
-          ...task,
-          equipe: task.utilisateurs ? task.utilisateurs.map(user => user.nom_complet) : []
-        }));
+
+        delete projObj.utilisateurs;
+
+        projObj.taches = projObj.taches
+          .filter(task => task.utilisateurs.some(u => u.id === userId))
+          .map(task => {
+            const equipe = task.utilisateurs.map(u => ({
+              id: u.id,
+              nom_complet: u.nom_complet
+            }));
+            delete task.utilisateurs;
+            return { ...task, equipe };
+          });
+  
         return projObj;
       });
   
-      if (!projects.length) {
+      if (!Projets.length) {
         return res.status(404).json({ message: "Aucun projet disponible." });
       }
   
       res.status(200).json({ Projets });
     } catch (error) {
-      console.error(error);
+      console.error("Error in getAllProjects:", error);
       res.status(500).json({ message: "Erreur du serveur." });
     }
 };
@@ -249,7 +255,7 @@ const createProject = async (req, res) => {
             date_de_debut,
             date_de_fin,
             buget_global,
-           
+            created_by: req.user.id
         });
 
         await projet_utilisateur.create({

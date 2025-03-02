@@ -38,6 +38,14 @@ const tache = sequelize.define('tache', {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
+    created_by :{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references:{
+            model: 'utilisateur',
+            key: 'id'
+        }
+    }
 }, {
     tableName: 'tache',
     timestamps: false,
