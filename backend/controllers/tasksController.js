@@ -42,7 +42,8 @@ const createTask = async (req, res) => {
             statut,
             date_de_debut_tache,
             date_de_fin_tache,
-            poids
+            poids,
+            created_by: req.user.id
         });
 
         await tache_projet.create({

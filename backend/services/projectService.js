@@ -2,18 +2,22 @@ const { tache, utilisateur } = require("../models");
 const { Op } = require("sequelize");
 
 const getProjectFilter = (userRole, userId) => {
-  if (userRole === 'utilisateur') {
-    return {
-      [Op.or]: [
-        { '$utilisateurs.id$': userId },
-        { '$taches.utilisateurs.id$': userId }
-      ]
-    };
+  switch (userRole) {
+    case 'utilisateur':
+      
+      return {
+        [Op.or]: [
+          { '$utilisateurs.id$': userId },
+          { '$taches.utilisateurs.id$': userId }
+        ]
+      };
+    case 'chef de projet':
+      return { created_by: userId };
+    case 'administrateur':
+    case 'directeur':
+    default:
+      return {};
   }
-  if (userRole === 'chef de projet') {
-    return { created_by: userId };
-  }
-  return {};
 };
 
 const getUserInclude = () => {
@@ -44,7 +48,7 @@ const getTaskInclude = () => {
     include: [{
       model: utilisateur,
       through: { attributes: [] },
-      as: "utilisateurs",
+      as: 'utilisateurs',
       attributes: ['id', 'nom_complet'],
       required: false
     }]

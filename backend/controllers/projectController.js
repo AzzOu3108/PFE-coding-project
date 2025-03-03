@@ -12,27 +12,29 @@ const getAllProjects = async (req, res) => {
   
       const projects = await projet.findAll({
         where: projectFilter,
-        include: [
-          userInclude,
-          taskInclude
-        ]
+        include: [userInclude, taskInclude]
       });
   
       const Projets = projects.map(project => {
         const projObj = project.toJSON();
 
         delete projObj.utilisateurs;
-
-        projObj.taches = projObj.taches
-          .filter(task => task.utilisateurs.some(u => u.id === userId))
-          .map(task => {
-            const equipe = task.utilisateurs.map(u => ({
-              id: u.id,
-              nom_complet: u.nom_complet
-            }));
-            delete task.utilisateurs;
-            return { ...task, equipe };
-          });
+  
+        let tasks = projObj.taches || [];
+        if (userRole === 'utilisateur') {
+          tasks = tasks.filter(task =>
+            task.utilisateurs && task.utilisateurs.some(u => u.id === userId)
+          );
+        }
+  
+        projObj.taches = tasks.map(task => {
+          const equipe = task.utilisateurs.map(u => ({
+            id: u.id,
+            nom_complet: u.nom_complet
+          }));
+          delete task.utilisateurs;
+          return { ...task, equipe };
+        });
   
         return projObj;
       });
@@ -46,7 +48,8 @@ const getAllProjects = async (req, res) => {
       console.error("Error in getAllProjects:", error);
       res.status(500).json({ message: "Erreur du serveur." });
     }
-};
+  };
+  
 
 
 const getProjectsByRole = async (req, res) => {
