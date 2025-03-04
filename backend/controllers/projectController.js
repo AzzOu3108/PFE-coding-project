@@ -48,9 +48,8 @@ const getAllProjects = async (req, res) => {
       console.error("Error in getAllProjects:", error);
       res.status(500).json({ message: "Erreur du serveur." });
     }
-  };
+};
   
-
 
 const getProjectsByRole = async (req, res) => {
     try {
