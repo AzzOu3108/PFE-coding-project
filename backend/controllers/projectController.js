@@ -1,153 +1,55 @@
 const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur } = require("../models");
-const { getProjectFilter, getUserInclude, getTaskInclude } = require('../services/projectService')
 
 const getAllProjects = async (req, res) => {
     try {
-      const userRole = req.user.role;
-      const userId = req.user.id;
-  
-      const projectFilter = getProjectFilter(userRole, userId);
-      const userInclude = getUserInclude();
-      const taskInclude = getTaskInclude();
-  
-      const projects = await projet.findAll({
-        where: projectFilter,
-        include: [userInclude, taskInclude]
-      });
-  
-      const Projets = projects.map(project => {
-        const projObj = project.toJSON();
-
-        delete projObj.utilisateurs;
-  
-        let tasks = projObj.taches || [];
-        if (userRole === 'utilisateur') {
-          tasks = tasks.filter(task =>
-            task.utilisateurs && task.utilisateurs.some(u => u.id === userId)
-          );
-        }
-  
-        projObj.taches = tasks.map(task => {
-          const equipe = task.utilisateurs.map(u => ({
-            id: u.id,
-            nom_complet: u.nom_complet
-          }));
-          delete task.utilisateurs;
-          return { ...task, equipe };
+        const projects = await projet.findAll({
+            include: [
+                {
+                    model: tache,
+                    through: { attributes: [] },
+                    as: 'taches',
+                    include: [{
+                        model: utilisateur,
+                        through: { attributes: [] },
+                        as: "utilisateurs", 
+                        attributes: ['id','nom_complet']
+                    }],
+                }
+            ]
         });
-  
-        return projObj;
-      });
-  
-      if (!Projets.length) {
-        return res.status(404).json({ message: "Aucun projet disponible." });
-      }
-  
-      res.status(200).json({ Projets });
+
+        if (!projects.length) {
+            return res.status(404).json({ message: "Aucun projet disponible." });
+        }
+
+        const transformedProjects = projects.map(project => ({
+            ...project.toJSON(),
+            taches: project.taches.map(task => ({
+                ...task.toJSON(),
+                equipe: task.utilisateurs.map(user =>{
+                    return {id: user.id, nom_complet: user.nom_complet}
+                }),
+                utilisateurs: undefined,
+            }))
+        }));
+
+        res.status(200).json({ projects: transformedProjects });
     } catch (error) {
-      console.error("Error in getAllProjects:", error);
-      res.status(500).json({ message: "Erreur du serveur." });
+        console.error("Error in getAllProjects:", error);
+        res.status(500).json({ message: "Erreur du serveur." });
     }
 };
   
 
 const getProjectsByRole = async (req, res) => {
     try {
-        const user = req.user;
-        if (!user) {
-            return res.status(401).json({ message: "Non authentifié" });
+        const userId = req.user.id;
+        const userRole = req.user.role;
+        if (!userId || !userRole) {
+            return res.status(400).json({ message: "Non authentifié" });
         }
 
-        // Base include configuration (reused from getAllProjects)
-        const baseIncludes = [
-            {
-                model: utilisateur,
-                through: { attributes: [] },
-                as: 'utilisateurs',
-                attributes: ['nom_complet']
-            },
-            {
-                model: tache,
-                through: { attributes: [] },
-                as: 'taches',
-                attributes: ['titre', 'statut', 'date_de_debut_tache', 'date_de_fin_tache', 'poids'],
-                include: [{
-                    model: utilisateur,
-                    through: { attributes: [] },
-                    as: "utilisateurs",
-                    attributes: ['nom_complet'],
-                }],
-            }
-        ];
-
-        let queryOptions = {
-            include: baseIncludes
-        };
-
-        // Role-based filtering
-        switch (user.role) {
-            case 'administrateur':
-            case 'directeur':
-                // No additional filters - get all projects
-                break;
-
-            case 'chef de projet':
-                queryOptions.where = { createur_id: user.id };
-                queryOptions.include = baseIncludes.map(include => {
-                    if (include.as === 'taches') {
-                        return {
-                            ...include,
-                            where: { createur_id: user.id } // Only tasks they created
-                        };
-                    }
-                    return include;
-                });
-                break;
-
-            case 'utilisateur':
-                queryOptions.include = baseIncludes.map(include => {
-                    if (include.as === 'utilisateurs') {
-                        return {
-                            ...include,
-                            where: { id: user.id },
-                            required: true
-                        };
-                    }
-                    if (include.as === 'taches') {
-                        return {
-                            ...include,
-                            include: [{
-                                ...include.include[0],
-                                where: { id: user.id },
-                                required: true
-                            }]
-                        };
-                    }
-                    return include;
-                });
-                break;
-
-            default:
-                return res.status(403).json({ message: "Accès non autorisé" });
-        }
-
-        const projects = await projet.findAll(queryOptions);
-
-        // Transform results (reused from getAllProjects)
-        const Projets = projects.map(project => ({
-            ...project.toJSON(),
-            taches: project.taches.map(task => ({
-                ...task.toJSON(),
-                equipe: task.utilisateurs.map(user => user.nom_complet),
-                utilisateurs: undefined,
-            }))
-        }));
-
-        if (!projects.length) {
-            return res.status(404).json({ message: "Aucun projet trouvé" });
-        }
-
-        res.status(200).json({ Projets });
+        
 
     } catch (error) {
         console.error(error);
