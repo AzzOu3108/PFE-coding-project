@@ -49,7 +49,66 @@ const getProjectsByRole = async (req, res) => {
             return res.status(400).json({ message: "Non authentifié" });
         }
 
-        
+        let projects;
+        if(userRole === 'chef de projet'){
+            projects = await projet.findAll({
+                where: {created_by: userId},
+                include: [
+                    {
+                        model: tache,
+                        through: { attributes: [] },
+                        as: 'taches',
+                        include: [{
+                            model: utilisateur,
+                            through: { attributes: [] },
+                            as: "utilisateurs", 
+                            attributes: ['id','nom_complet']
+                        }],
+                    }
+                ]
+            });
+        } else if (userRole === 'utilisateur') {
+            projects = await projet.findAll({
+                include: [
+                    {
+                        model: tache,
+                        through: { attributes: [] },
+                        as: 'taches',
+                        include: [{
+                            model: utilisateur,
+                            through: { attributes: [] },
+                            as: "utilisateurs", 
+                            where: { id: userId },
+                            attributes: ['id', 'nom_complet']
+                        }],
+                    },
+                    {
+                        model: utilisateur,
+                        as: 'utilisateurs',
+                        attributes: ['id', 'nom_complet']
+                    }
+                ]
+            });
+        } else {
+            return res.status(403).json({ message: "Accès refusé" });
+        }
+        if (!projects.length) {
+            return res.status(404).json({ message: "Aucun projet disponible." });
+        }
+
+        const transformedProjects = projects.map(project => ({
+            ...project.toJSON(),
+            taches: project.taches.map(task => ({
+                ...task.toJSON(),
+                equipe: task.utilisateurs.map(user => ({
+                    id: user.id,
+                    nom_complet: user.nom_complet
+                })),
+                utilisateurs: undefined,
+            }))
+        }));
+
+        res.status(200).json({ projects: transformedProjects });
 
     } catch (error) {
         console.error(error);
