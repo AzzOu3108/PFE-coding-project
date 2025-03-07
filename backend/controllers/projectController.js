@@ -45,14 +45,15 @@ const getProjectsByRole = async (req, res) => {
     try {
         const userId = req.user.id;
         const userRole = req.user.role;
+
         if (!userId || !userRole) {
             return res.status(400).json({ message: "Non authentifié" });
         }
 
         let projects;
-        if(userRole === 'chef de projet'){
+        if (userRole === 'chef de projet') {
             projects = await projet.findAll({
-                where: {created_by: userId},
+                where: { created_by: userId },
                 include: [
                     {
                         model: tache,
@@ -61,13 +62,26 @@ const getProjectsByRole = async (req, res) => {
                         include: [{
                             model: utilisateur,
                             through: { attributes: [] },
-                            as: "utilisateurs", 
-                            attributes: ['id','nom_complet']
+                            as: "utilisateurs",
+                            attributes: ['id', 'nom_complet']
                         }],
                     }
                 ]
             });
         } else if (userRole === 'utilisateur') {
+            // First, find all tasks assigned to the user
+            const userTasks = await tache.findAll({
+                include: [{
+                    model: utilisateur,
+                    as: "utilisateurs",
+                    where: { id: userId },
+                    attributes: []
+                }],
+                attributes: ['id']
+            });
+
+            const taskIds = userTasks.map(task => task.id);
+            // Then, find all projects that have these tasks and include all tasks
             projects = await projet.findAll({
                 include: [
                     {
@@ -77,21 +91,19 @@ const getProjectsByRole = async (req, res) => {
                         include: [{
                             model: utilisateur,
                             through: { attributes: [] },
-                            as: "utilisateurs", 
-                            where: { id: userId },
+                            as: "utilisateurs",
                             attributes: ['id', 'nom_complet']
                         }],
-                    },
-                    {
-                        model: utilisateur,
-                        as: 'utilisateurs',
-                        attributes: ['id', 'nom_complet']
+                        where: {
+                            id: taskIds
+                        }
                     }
                 ]
             });
         } else {
             return res.status(403).json({ message: "Accès refusé" });
         }
+
         if (!projects.length) {
             return res.status(404).json({ message: "Aucun projet disponible." });
         }
@@ -109,10 +121,9 @@ const getProjectsByRole = async (req, res) => {
         }));
 
         res.status(200).json({ projects: transformedProjects });
-
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erreur du serveur" });
+        console.error("Error in getProjectsByRole:", error);
+        res.status(500).json({ message: "Erreur du serveur." });
     }
 };
 
