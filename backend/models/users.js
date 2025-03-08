@@ -41,7 +41,11 @@ const utilisateur = sequelize.define('utilisateur', {
             key: 'role_id'
         },
         allowNull: false
-    }
+    },
+    photo_de_profile: {
+        type: DataTypes.STRING(255),
+        allowNull: false
+    },
 },{
     tableName:'utilisateur',
     timestamps: false

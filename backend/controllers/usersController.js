@@ -55,6 +55,9 @@ const createNewUser = async (req, res) => {
 
         const hashpwd = await bcrypt.hash(mot_de_passe, 10);
 
+        const encodedName = encodeURIComponent(nom_complet);
+        const profile_pic = `https://avatar.iran.liara.run/username?username=${encodedName}`;
+
         const newUser = await utilisateur.create({
             matricule,
             nom_complet,
@@ -62,7 +65,8 @@ const createNewUser = async (req, res) => {
             mot_de_passe: hashpwd,
             numero_telephone,
             departement,
-            role_id: 1 // Default role: Utilisateur
+            role_id: 1, // Default role: Utilisateur
+            photo_de_profile: profile_pic
         });
 
         res.status(201).json({
