@@ -1,4 +1,5 @@
 const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur } = require("../models");
+const { Op } = require("sequelize");
 
 const getAllProjects = async (req, res) => {
     try {
@@ -53,7 +54,7 @@ const getProjectsByRole = async (req, res) => {
         let projects;
         if (userRole === 'chef de projet') {
             projects = await projet.findAll({
-                where: { created_by: userId },
+                where: {created_by: userId},
                 include: [
                     {
                         model: tache,
@@ -81,6 +82,7 @@ const getProjectsByRole = async (req, res) => {
             });
 
             const taskIds = userTasks.map(task => task.id);
+
             // Then, find all projects that have these tasks and include all tasks
             projects = await projet.findAll({
                 include: [
@@ -97,6 +99,26 @@ const getProjectsByRole = async (req, res) => {
                         where: {
                             id: taskIds
                         }
+                    }
+                ]
+            });
+
+            // Include all tasks from the projects found above
+            const projectIds = projects.map(project => project.id);
+
+            projects = await projet.findAll({
+                where: { id: projectIds },
+                include: [
+                    {
+                        model: tache,
+                        through: { attributes: [] },
+                        as: 'taches',
+                        include: [{
+                            model: utilisateur,
+                            through: { attributes: [] },
+                            as: "utilisateurs",
+                            attributes: ['id', 'nom_complet']
+                        }]
                     }
                 ]
             });
