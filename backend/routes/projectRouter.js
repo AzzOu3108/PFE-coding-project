@@ -3,9 +3,7 @@ const router = express.Router()
 const projectController = require('../controllers/projectController')
 const { isAuthenticated, isAuthorized } = require('../middleware/authMiddleware')
 
-router.get('/by-role', isAuthenticated, isAuthorized(['utilisateur', 'chef de projet'])
-, projectController.getProjectsByRole
-)
+router.get('/by-role', isAuthenticated, isAuthorized(['utilisateur', 'chef de projet']), projectController.getProjectsByRole)
 
 router.route('/')
     .post(isAuthenticated, isAuthorized(['chef de projet', 'administrateur']), projectController.createProject)

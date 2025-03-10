@@ -7,8 +7,10 @@ const tache_utilisateur = require('./tache_utilisateur');
 const tache_projet = require('./tache_projet');
 const projet_utilisateur = require('./projet_utilisateur');
 const refreshtoken = require('./refreshtoken')
+const notification = require('./notification');
 
-// Associations
+// Associations:
+// user association
 utilisateur.belongsTo(role, {
     foreignKey: 'role_id',
     as: 'role'
@@ -33,6 +35,7 @@ utilisateur.belongsToMany(tache, {
     onDelete: 'CASCADE'
 });
 
+// Project association
 projet.belongsToMany(utilisateur, {
     through: 'projet_utilisateur',
     foreignKey: 'projet_id',
@@ -52,6 +55,7 @@ projet.belongsTo(utilisateur, {
     as: 'creator'
 });
 
+// Task association
 tache.belongsToMany(utilisateur, {
     through: 'tache_utilisateur',
     foreignKey: 'tache_id',
@@ -66,6 +70,7 @@ tache.belongsToMany(projet, {
     onDelete: 'CASCADE'
 });
 
+// Join tables association
 tache_projet.belongsTo(tache, { 
     foreignKey: 'tache_id', 
     onDelete: 'CASCADE' 
@@ -104,6 +109,30 @@ refreshtoken.belongsTo(utilisateur, {
     onDelete: 'CASCADE'
 });
 
+// Notification association
+notification.belongsToMany(utilisateur, {
+    through: 'notification_utilisateur',
+    foreignKey: 'notification_id',
+    as: 'utilisateurs',
+    onDelete: 'CASCADE'
+});
+
+utilisateur.belongsToMany(notification, {
+    through: 'notification_utilisateur',
+    foreignKey: 'utilisateur_id',
+    as: 'notifications',
+    onDelete: 'CASCADE'
+});
+
+notification.belongsTo(tache, {
+    foreignKey: 'tache_id',
+    onDelete: 'CASCADE'
+});
+
+notification.belongsTo(projet, {
+    foreignKey: 'projet_id',
+    onDelete: 'CASCADE'
+});
 
 module.exports = {
     sequelize,
@@ -114,5 +143,6 @@ module.exports = {
     tache_utilisateur,
     tache_projet,
     projet_utilisateur,
-    refreshtoken
+    refreshtoken,
+    notification
 };
