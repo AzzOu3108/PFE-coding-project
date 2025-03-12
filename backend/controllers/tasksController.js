@@ -57,6 +57,13 @@ const createTask = async (req, res) => {
         }));
         await tache_utilisateur.bulkCreate(userTaskEntries);
 
+        const taskList = users.map(user => `-${newTask.titre}`).join('\n');
+        await notification.create({
+            countent: `Chef de projet ${req.user.nom_complet} a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:\n${taskList}`,
+            projet_id: projet_id,
+            tache_id: newTask.id
+        });
+
         res.status(201).json({
             message: "Tâche créée avec succès",
             tache: newTask,

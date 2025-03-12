@@ -1,4 +1,4 @@
-const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur } = require("../models");
+const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur, notification } = require("../models");
 const { Op } = require("sequelize");
 
 const getAllProjects = async (req, res) => {
@@ -257,7 +257,12 @@ const createProject = async (req, res) => {
         await projet_utilisateur.create({
             projet_id: newProject.id,
             utilisateur_id: req.user.id
-        })
+        });
+
+        await notification.create({
+            countent: `Chef de projet ${req.user.nom_complet} a créé le projet "${nom_de_projet}".`,
+            projet_id: newProject.id,
+        });
 
         res.status(201).json({ message: "Projet créé avec succès.", newProject });
     } catch (error) {
@@ -292,7 +297,7 @@ const updateProject = async (req, res) => {
     }
 };
 
-// TODO: Extracting req.userId from Token ki tlha9 l auth and Authorization
+
 const deleteProject = async (req, res) => {
     const { id } = req.params;
     const { utilisateur_id } = req.body;
