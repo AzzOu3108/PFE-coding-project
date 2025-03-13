@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/DB');
-const projet = require('./project');
 
 const notification = sequelize.define('notification', {
     id:{
@@ -11,6 +10,14 @@ const notification = sequelize.define('notification', {
     content:{
         type: DataTypes.STRING(255),
         allowNull: false
+    },
+    utilisateur_id:{
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'utilisateur',
+            key: 'id'
+        }
     },
     tache_id:{
         type: DataTypes.INTEGER,
@@ -30,7 +37,8 @@ const notification = sequelize.define('notification', {
     },
 },{
     tableName: 'notification',
-    timestamps: true
+    timestamps: true,
+    updatedAt: false,
 });
 
 

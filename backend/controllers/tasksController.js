@@ -1,4 +1,4 @@
-const { tache, projet, utilisateur, tache_utilisateur, tache_projet } = require("../models");
+const { tache, projet, utilisateur, tache_utilisateur, tache_projet, notification } = require("../models");
 
 
 const createTask = async (req, res) => {
@@ -59,7 +59,7 @@ const createTask = async (req, res) => {
 
         const taskList = users.map(user => `-${newTask.titre}`).join('\n');
         await notification.create({
-            countent: `Chef de projet ${req.user.nom_complet} a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:\n${taskList}`,
+            content: `Chef de projet ${req.user.nom_complet} a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:\n${taskList}`,
             projet_id: projet_id,
             tache_id: newTask.id
         });

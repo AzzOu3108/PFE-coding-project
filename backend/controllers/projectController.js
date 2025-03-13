@@ -259,11 +259,6 @@ const createProject = async (req, res) => {
             utilisateur_id: req.user.id
         });
 
-        await notification.create({
-            countent: `Chef de projet ${req.user.nom_complet} a créé le projet "${nom_de_projet}".`,
-            projet_id: newProject.id,
-        });
-
         res.status(201).json({ message: "Projet créé avec succès.", newProject });
     } catch (error) {
         console.error(error);
