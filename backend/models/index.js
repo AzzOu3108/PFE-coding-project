@@ -6,8 +6,9 @@ const role = require('./roles');
 const tache_utilisateur = require('./tache_utilisateur');
 const tache_projet = require('./tache_projet');
 const projet_utilisateur = require('./projet_utilisateur');
-const refreshtoken = require('./refreshtoken')
+const refreshtoken = require('./refreshtoken');
 const notification = require('./notification');
+const notification_utilisateur = require('./notification_utilisateur');
 
 // Associations:
 // user association
@@ -131,6 +132,16 @@ notification.belongsTo(tache, {
 
 notification.belongsTo(projet, {
     foreignKey: 'projet_id',
+    onDelete: 'CASCADE'
+});
+
+notification_utilisateur.belongsTo(notification, {
+    foreignKey: 'notification_id',
+    onDelete: 'CASCADE'
+});
+
+notification_utilisateur.belongsTo(utilisateur, {
+    foreignKey: 'utilisateur_id',
     onDelete: 'CASCADE'
 });
 

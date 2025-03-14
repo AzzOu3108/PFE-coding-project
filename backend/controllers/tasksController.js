@@ -10,9 +10,9 @@ const createTask = async (req, res) => {
     }
 
     const allowedRoles = ['chef de projet', 'administrateur'];
-        if (!allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({ message: "Vous n'avez pas la permission de mettre à jour cette tâche." });
-        }
+    if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).json({ message: "Vous n'avez pas la permission de mettre à jour cette tâche." });
+    }
 
     if (equipe.length === 0) {
         return res.status(400).json({ message: "Vous devez assigner la tâche à au moins un utilisateur." });
@@ -23,9 +23,8 @@ const createTask = async (req, res) => {
     }
 
     try {
-
-        const existingtask = await tache.findOne({ where: { titre } });
-        if (existingtask) {
+        const existingTask = await tache.findOne({ where: { titre } });
+        if (existingTask) {
             return res.status(409).json({ message: "La tâche existe déjà" });
         }
 
@@ -46,23 +45,18 @@ const createTask = async (req, res) => {
             created_by: req.user.id
         });
 
-        await tache_projet.create({
-            tache_id: newTask.id,
-            projet_id: projet_id
-        });
+        await tache_projet.create({ tache_id: newTask.id, projet_id });
 
-        const userTaskEntries = users.map(user => ({
-            utilisateur_id: user.id,
-            tache_id: newTask.id
-        }));
-        await tache_utilisateur.bulkCreate(userTaskEntries);
+        await newTask.addUtilisateurs(users);
 
-        const taskList = users.map(user => `-${newTask.titre}`).join('\n');
-        await notification.create({
-            content: `Chef de projet ${req.user.nom_complet} a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:\n${taskList}`,
-            projet_id: projet_id,
+        const taskList = `\n- ${newTask.titre}`;
+        const newNotification = await notification.create({
+            content: `Chef de projet ${req.user.nom_complet} a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:${taskList}`,
+            projet_id,
             tache_id: newTask.id
         });
+
+        await newNotification.addUtilisateurs(users);
 
         res.status(201).json({
             message: "Tâche créée avec succès",
