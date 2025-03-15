@@ -1,9 +1,10 @@
 const { tache, projet, utilisateur, tache_utilisateur, tache_projet, notification } = require("../models");
 
+const pendingTasks = {};
 
 const createTask = async (req, res) => {
     const projet_id = req.project.id;
-    const { titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids } = req.body;
+    const { titre, equipe, statut, date_de_debut_tache, date_de_fin_tache, poids, finalize } = req.body;
 
     if (!titre || !equipe || !statut || !date_de_debut_tache || !date_de_fin_tache || !poids) {
         return res.status(400).json({ message: "Veuillez remplir tous les champs." });
@@ -49,15 +50,23 @@ const createTask = async (req, res) => {
 
         await newTask.addUtilisateurs(users);
 
-        const taskList = `\n- ${newTask.titre}`;
-        const newNotification = await notification.create({
-            content: `Chef de projet ${req.user.nom_complet} a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:${taskList}`,
-            projet_id,
-            tache_id: newTask.id
-        });
+        if(!pendingTasks[projet_id]) {
+            pendingTasks[projet_id] = [];
 
-        await newNotification.addUtilisateurs(users);
+        }
 
+        pendingTasks[projet_id].push(`- ${newTask.titre}`)
+        if (finalize) {
+            const allTasks = pendingTasks[projet_id].join('\n');
+            const newNotification = await notification.create({
+                content: `Chef de projet ${req.user.nom_complet} a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:\n${allTasks}`,
+                projet_id
+            });
+
+            await newNotification.addUtilisateurs(users);
+            delete pendingTasks[projet_id];
+        }
+        
         res.status(201).json({
             message: "Tâche créée avec succès",
             tache: newTask,
