@@ -42,7 +42,7 @@ const utilisateur = sequelize.define('utilisateur', {
         },
         allowNull: false
     },
-    photo_de_profile: {
+    photo_de_profil: {
         type: DataTypes.STRING(255),
         allowNull: false
     },

@@ -59,7 +59,7 @@ const createTask = async (req, res) => {
         if (finalize) {
             const allTasks = pendingTasks[projet_id].join('\n');
             const newNotification = await notification.create({
-                content: `Chef de projet ${req.user.nom_complet} a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:\n${allTasks}`,
+                contenu: `Chef de projet "${req.user.nom_complet}" a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:\n${allTasks}`,
                 projet_id
             });
 

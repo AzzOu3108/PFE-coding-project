@@ -66,7 +66,7 @@ const createNewUser = async (req, res) => {
             numero_telephone,
             departement,
             role_id: 1, // Default role: Utilisateur
-            photo_de_profile: profile_pic
+            photo_de_profil: profile_pic
         });
 
         res.status(201).json({
