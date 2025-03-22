@@ -1,5 +1,4 @@
 const { projet, tache, projet_utilisateur, tache_projet, utilisateur, tache_utilisateur, notification } = require("../models");
-const { Op } = require("sequelize");
 
 const getAllProjects = async (req, res) => {
     try {
@@ -203,32 +202,33 @@ const createProject = async (req, res) => {
     const {
         function_de_projet,
         nom_de_projet,
-        nom_programme,
+        nom_de_programme,
         sponsor_de_programme,
         manager_de_projet,
         controle_des_couts,
         description,
-        objective,
-        date_de_debut,
-        date_de_fin,
+        objectif,
+        date_de_debut_projet,
+        date_de_fin_projet,
         buget_global,
     } = req.body;
 
     if (!nom_de_projet || 
         !function_de_projet || 
-        !nom_programme ||
+        !nom_de_programme ||
         !sponsor_de_programme ||
         !manager_de_projet ||  
+        !controle_des_couts ||
         !description || 
-        !objective || 
-        !date_de_debut || 
-        !date_de_fin || 
+        !objectif || 
+        !date_de_debut_projet || 
+        !date_de_fin_projet || 
         !buget_global
     ) {
         return res.status(400).json({ message: "Veuillez remplir tous les champs obligatoires." });
     }
 
-    if (new Date(date_de_debut) >= new Date(date_de_fin)) {
+    if (new Date(date_de_debut_projet) >= new Date(date_de_fin_projet)) {
         return res.status(400).json({ message: "La date de début doit être antérieure à la date de fin." });
     }
 
@@ -241,15 +241,15 @@ const createProject = async (req, res) => {
 
         const newProject = await projet.create({
             function_de_projet,
-            nom_programme,
+            nom_de_programme,
             sponsor_de_programme,
             manager_de_projet,
             nom_de_projet,
             controle_des_couts,
             description,
-            objective,
-            date_de_debut,
-            date_de_fin,
+            objectif,
+            date_de_debut_projet,
+            date_de_fin_projet,
             buget_global,
             created_by: req.user.id
         });

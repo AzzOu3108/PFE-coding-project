@@ -1,4 +1,6 @@
 const { tache, projet, utilisateur, tache_utilisateur, tache_projet, notification } = require("../models");
+const notification_utilisateur = require("../models/notification_utilisateur");
+
 
 const pendingTasks = {};
 
@@ -21,6 +23,10 @@ const createTask = async (req, res) => {
 
     if (new Date(date_de_debut_tache) >= new Date(date_de_fin_tache)) {
         return res.status(400).json({ message: "La date de début doit être antérieure à la date de fin." });
+    }
+
+    if (poids < 0 || poids > 100){
+        return res.status(400).json({ message: "Le poids doit être compris entre 0 et 100." });
     }
 
     try {
@@ -50,23 +56,33 @@ const createTask = async (req, res) => {
 
         await newTask.addUtilisateurs(users);
 
-        if(!pendingTasks[projet_id]) {
+        if (!pendingTasks[projet_id]) {
             pendingTasks[projet_id] = [];
-
         }
 
-        pendingTasks[projet_id].push(`- ${newTask.titre}`)
+        pendingTasks[projet_id].push(`- ${newTask.titre}`);
         if (finalize) {
             const allTasks = pendingTasks[projet_id].join('\n');
-            const newNotification = await notification.create({
-                contenu: `Chef de projet "${req.user.nom_complet}" a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:\n${allTasks}`,
-                projet_id
-            });
+            const notificationMessage = `Chef de projet "${req.user.nom_complet}" a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:\n${allTasks}`;
 
-            await newNotification.addUtilisateurs(users);
+            const notifications = users.map(user => ({
+                contenu: notificationMessage,
+                projet_id,
+                tache_id: newTask.id,
+                utilisateur_id: user.id
+            }));
+
+            const createdNotifications = await notification.bulkCreate(notifications);
+
+            const notificationUserEntries = createdNotifications.map(notification => ({
+                notification_id: notification.id,
+                utilisateur_id: notification.user.id
+            }));
+            await notification_utilisateur.bulkCreate(notificationUserEntries);
+
             delete pendingTasks[projet_id];
         }
-        
+
         res.status(201).json({
             message: "Tâche créée avec succès",
             tache: newTask,
@@ -257,6 +273,14 @@ const deleteTask = async (req, res) => {
         if (!task) {
             return res.status(404).json({ message: "Tâche introuvable." });
         }
+
+        await notification_utilisateur.destroy({
+            where: { notification_id: id }
+        });
+
+        await notification.destroy({
+            where: { tache_id: id }
+        });
 
         await tache_projet.destroy({
             where:{ tache_id: id }

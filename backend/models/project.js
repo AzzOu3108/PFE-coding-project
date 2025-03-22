@@ -11,7 +11,7 @@ const projet = sequelize.define('projet', {
         type: DataTypes.STRING(70),
         allowNull: false
     },
-    nom_programme: {
+    nom_de_programme: {
         type: DataTypes.CHAR(40),
         allowNull: false
     },
@@ -35,15 +35,15 @@ const projet = sequelize.define('projet', {
         type: DataTypes.STRING(255),
         allowNull: false
     },
-    objective: {
+    objectif: {
         type: DataTypes.STRING(255),
         allowNull: false
     },
-    date_de_debut: {
+    date_de_debut_projet: {
         type: DataTypes.DATE,
         allowNull: false
     },
-    date_de_fin: {
+    date_de_fin_projet: {
         type: DataTypes.DATE,
         allowNull: false
     },
