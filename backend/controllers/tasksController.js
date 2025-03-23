@@ -1,6 +1,5 @@
-const { tache, projet, utilisateur, tache_utilisateur, tache_projet, notification } = require("../models");
-const notification_utilisateur = require("../models/notification_utilisateur");
-
+const { tache, projet, utilisateur, tache_utilisateur, tache_projet, notification, notification_utilisateur } = require("../models");
+//* export notification_utilisateur mn l model ida mmchatch
 
 const pendingTasks = {};
 
