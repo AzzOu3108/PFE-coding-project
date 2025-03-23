@@ -74,9 +74,9 @@ const createTask = async (req, res) => {
 
             const createdNotifications = await notification.bulkCreate(notifications);
 
-            const notificationUserEntries = createdNotifications.map(notification => ({
-                notification_id: notification.id,
-                utilisateur_id: notification.user.id
+            const notificationUserEntries = createdNotifications.map((notif, index) => ({
+                notification_id: notif.id,
+                utilisateur_id: notifications[index].utilisateur_id
             }));
             await notification_utilisateur.bulkCreate(notificationUserEntries);
 
