@@ -13,7 +13,7 @@ const getNotifications = async (req, res) => {
                     through: {
                         model: notification_utilisateur,
                         where: { utilisateur_id: userId },
-                        attributes: []
+                        attributes: [],
                     }
                 },
                 { model: projet, attributes: ['nom_de_projet'], as: 'projet' },
@@ -21,6 +21,9 @@ const getNotifications = async (req, res) => {
             ],
             order: [['createdAt', 'DESC']]
         });
+        if(notifications.length === 0){
+            return res.status(404).json({ message: "Aucune notification trouvée." });
+        }
         res.status(200).json({ notifications });
     } catch (error) {
         console.error(error);

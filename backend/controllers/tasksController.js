@@ -1,4 +1,6 @@
-const { tache, projet, utilisateur, tache_utilisateur, tache_projet, notification, notification_utilisateur } = require("../models");
+const { tache, projet, utilisateur, tache_utilisateur, tache_projet, notification,  } = require("../models");
+const { sendEmail } = require('../config/emailConfig');
+const notification_utilisateur = require("../models/notification_utilisateur");
 //* export notification_utilisateur mn l model ida mmchatch
 
 const pendingTasks = {};
@@ -34,7 +36,10 @@ const createTask = async (req, res) => {
             return res.status(409).json({ message: "La tâche existe déjà" });
         }
 
-        const users = await utilisateur.findAll({ where: { nom_complet: equipe } });
+        const users = await utilisateur.findAll({ where: { nom_complet: equipe },
+            attributes: ['id', 'nom_complet', 'adresse_email']
+        });
+        
         if (users.length !== equipe.length) {
             const missingUsers = equipe.filter(userName =>
                 !users.some(user => user.nom_complet === userName)
@@ -80,8 +85,11 @@ const createTask = async (req, res) => {
             await notification_utilisateur.bulkCreate(notificationUserEntries);
 
             delete pendingTasks[projet_id];
-        }
 
+            for (const user of users) {
+                await sendEmail(user.adresse_email, 'Nouveau projet créé', notificationMessage);
+            }
+        }
         res.status(201).json({
             message: "Tâche créée avec succès",
             tache: newTask,
