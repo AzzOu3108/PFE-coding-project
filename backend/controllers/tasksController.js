@@ -67,7 +67,7 @@ const createTask = async (req, res) => {
         pendingTasks[projet_id].push(`- ${newTask.titre}`);
         if (finalize) {
             const allTasks = pendingTasks[projet_id].join('\n');
-            const notificationMessage = `Chef de projet "${req.user.nom_complet}" a créé le projet "${req.project.nom_de_projet}" et vous a assigné les tâches:\n${allTasks}`;
+            const notificationMessage = `Le Chef de Projet "${req.user.nom_complet}" a créé le projet "${req.project.nom_de_projet}" et vous a attribué les tâches suivantes :\n${allTasks}`;
 
             const notifications = users.map(user => ({
                 contenu: notificationMessage,

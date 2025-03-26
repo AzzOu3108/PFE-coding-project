@@ -8,7 +8,6 @@ const isAuthenticated = async (req, res, next) => {
     if (!token) {
         return res.status(401).json({ message: 'Authentification requise' });
     }
-
     try {
         const tokenValue = token.replace('Bearer ', '').trim();
 
@@ -19,7 +18,8 @@ const isAuthenticated = async (req, res, next) => {
                 model: role,
                 as: 'role',
                 attributes: ['role_name']
-            }]
+            }],
+            attributes: ['id', 'nom_complet']
         })
         if (!user) {
             return res.status(401).json({ message: 'Utilisateur non trouvé' });
@@ -30,7 +30,8 @@ const isAuthenticated = async (req, res, next) => {
 
         req.user = {
             id: user.id,
-            role: user.role.role_name
+            role: user.role.role_name,
+            nom_complet: user.nom_complet
         };
 
         next();
