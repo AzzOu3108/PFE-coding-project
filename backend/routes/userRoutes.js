@@ -8,7 +8,7 @@ router.route('/')
     .get(isAuthenticated, isAuthorized(['administrateur', 'directeur']),usersController.getAllUser)
     
 router.route('/search')
-    .get(isAuthenticated, isAuthorized(['administrateur', 'directeur']),usersController.getUserByName)
+    .get(isAuthenticated, isAuthorized(['utilisateur','chef de projet','administrateur', 'directeur']),usersController.getUserByName)
 
 router.route('/:id')
     .put(isAuthenticated, usersController.updateUser)

@@ -10,9 +10,9 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendEmail = async (to, subject, text) => {
-    console.log('Sending email to:', to);
-    console.log('EMAIL_USER:', process.env.EMAIL_USER);
-    console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Loaded' : 'Not Loaded');
+    // console.log('Sending email to:', to);
+    // console.log('EMAIL_USER:', process.env.EMAIL_USER);
+    // console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Loaded' : 'Not Loaded');
 
     if (!to || !to.includes('@')) {
         console.error('Invalid email address:', to);

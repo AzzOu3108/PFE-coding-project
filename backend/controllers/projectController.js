@@ -274,6 +274,10 @@ const updateProject = async (req, res) => {
         return res.status(400).json({ message: "L'ID du projet est requis dans l'URL." });
     }
 
+    if (new Date(updateData.date_de_debut_projet) >= new Date(updateData.date_de_fin_projet)) {
+        return res.status(400).json({ message: "La date de début doit être antérieure à la date de fin." });
+    }
+
     try {
         const project = await projet.findByPk(id);
 

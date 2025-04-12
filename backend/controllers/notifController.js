@@ -14,21 +14,41 @@ const getNotifications = async (req, res) => {
                         model: notification_utilisateur,
                         where: { utilisateur_id: userId },
                         attributes: [],
-                    }
+                    },
+                    required: true
                 },
                 { model: projet, attributes: ['nom_de_projet'], as: 'projet' },
                 { model: tache, attributes: ['titre'], as: 'tache' }
             ],
             order: [['createdAt', 'DESC']]
         });
-        if(notifications.length === 0){
+
+        if (notifications.length === 0) {
             return res.status(404).json({ message: "Aucune notification trouvée." });
         }
-        res.status(200).json({ notifications });
+
+        // Process the content to remove escapes
+        const processedNotifications = notifications.map(notif => {
+            const contenu = notif.contenu
+                .replace(/\\"/g, '"')   // Replace \" with "
+                .replace(/\\n/g, '\n'); // Replace \n with newline
+
+            return {
+                ...notif.toJSON(),
+                contenu
+            };
+        });
+
+        res.status(200).json({ notifications: processedNotifications });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur du serveur." });
     }
 };
+
+
+const deleteNotification = async (req, res) => {
+    
+}
 
 module.exports = { getNotifications };

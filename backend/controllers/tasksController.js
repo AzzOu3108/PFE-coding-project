@@ -31,7 +31,15 @@ const createTask = async (req, res) => {
     }
 
     try {
-        const existingTask = await tache.findOne({ where: { titre } });
+        const existingTask = await tache.findOne({
+            where: { titre },
+            include: [{
+                model: projet,
+                where: { id: projet_id },
+                as: 'projets'
+            }]
+        });
+        
         if (existingTask) {
             return res.status(409).json({ message: "La tâche existe déjà" });
         }
@@ -47,54 +55,93 @@ const createTask = async (req, res) => {
             return res.status(404).json({ message: `Utilisateurs non trouvés: ${missingUsers.join(', ')}` });
         }
 
-        const newTask = await tache.create({
-            titre,
-            statut,
-            date_de_debut_tache,
-            date_de_fin_tache,
-            poids,
-            created_by: req.user.id
-        });
-
-        await tache_projet.create({ tache_id: newTask.id, projet_id });
-
-        await newTask.addUtilisateurs(users);
-
-        if (!pendingTasks[projet_id]) {
-            pendingTasks[projet_id] = [];
+        
+        if (!finalize) {
+            if (!pendingTasks[projet_id]) {
+                pendingTasks[projet_id] = [];
+            }
+            pendingTasks[projet_id].push({
+                titre,
+                statut,
+                date_de_debut_tache,
+                date_de_fin_tache,
+                poids,
+                created_by: req.user.id,
+                users
+            });
+            return res.status(200).json({ message: "Tâche en attente de finalisation" });
         }
 
-        pendingTasks[projet_id].push(`- ${newTask.titre}`);
+        // If finalizing, create all tasks and send one notification
         if (finalize) {
-            const allTasks = pendingTasks[projet_id].join('\n');
-            const notificationMessage = `Le Chef de Projet "${req.user.nom_complet}" a créé le projet "${req.project.nom_de_projet}" et vous a attribué les tâches suivantes :\n${allTasks}`;
+            const tasksToCreate = pendingTasks[projet_id] || [];
+            tasksToCreate.push({
+                titre,
+                statut,
+                date_de_debut_tache,
+                date_de_fin_tache,
+                poids,
+                created_by: req.user.id,
+                users
+            });
 
-            const notifications = users.map(user => ({
-                contenu: notificationMessage,
-                projet_id,
-                tache_id: newTask.id,
-                utilisateur_id: user.id
-            }));
+            const createdTasks = [];
+            const allUsers = new Set();
 
-            const createdNotifications = await notification.bulkCreate(notifications);
 
-            const notificationUserEntries = createdNotifications.map((notif, index) => ({
-                notification_id: notif.id,
-                utilisateur_id: notifications[index].utilisateur_id
-            }));
-            await notification_utilisateur.bulkCreate(notificationUserEntries);
+            for (const taskData of tasksToCreate) {
+                const newTask = await tache.create({
+                    titre: taskData.titre,
+                    statut: taskData.statut,
+                    date_de_debut_tache: taskData.date_de_debut_tache,
+                    date_de_fin_tache: taskData.date_de_fin_tache,
+                    poids: taskData.poids,
+                    created_by: taskData.created_by
+                });
 
-            delete pendingTasks[projet_id];
+                await tache_projet.create({ tache_id: newTask.id, projet_id });
+                await newTask.addUtilisateurs(taskData.users);
+                createdTasks.push(newTask);
+                taskData.users.forEach(user => allUsers.add(user));
+            }
 
-            for (const user of users) {
+            
+            const taskList = tasksToCreate.map(task => `- ${task.titre}`).join(' ');
+            const notificationMessage = `Le Chef de Projet ${req.user.nom_complet} a créé le projet ${req.project.nom_de_projet} et vous a attribué les tâches suivantes : ${taskList}`;
+
+            // Send notifications to all users
+            for (const user of allUsers) {
+                const newNotification = await notification.create({
+                    contenu: notificationMessage,
+                    projet_id,
+                    tache_id: createdTasks[0].id // Use first task ID as reference
+                });
+                await notification_utilisateur.create({
+                    notification_id: newNotification.id,
+                    utilisateur_id: user.id
+                });
                 await sendEmail(user.adresse_email, 'Nouveau projet créé', notificationMessage);
             }
+
+            delete pendingTasks[projet_id];
+            return res.status(201).json({
+                message: "Tâches créées avec succès",
+                tasks: createdTasks.map(task => ({
+                    id: task.id,
+                    titre: task.titre,
+                    statut: task.statut,
+                    date_de_debut_tache: task.date_de_debut_tache,
+                    date_de_fin_tache: task.date_de_fin_tache,
+                    poids: task.poids,
+                    created_by: task.created_by,
+                    utilisateurs: tasksToCreate.find(t => t.titre === task.titre).users.map(user => ({
+                        id: user.id,
+                        nom_complet: user.nom_complet,
+                        adresse_email: user.adresse_email
+                    }))
+                }))
+            });
         }
-        res.status(201).json({
-            message: "Tâche créée avec succès",
-            tache: newTask,
-            equipe: users.map(user => user.nom_complet)
-        });
 
     } catch (error) {
         console.error(error);
@@ -212,8 +259,7 @@ const updateTask = async (req, res) => {
 const updateTasksStatus = async (req, res) => {
         const { id } = req.params;
         const { statut } = req.body;
-    
-        try {
+                try {
             
             if (!id) {
                 return res.status(400).json({ message: "L'ID de la tâche est requis." });
@@ -276,13 +322,19 @@ const deleteTask = async (req, res) => {
 
     try {
         const task = await tache.findByPk(id);
-
         if (!task) {
             return res.status(404).json({ message: "Tâche introuvable." });
         }
 
+        const notifications = await notification.findAll({
+            where: { tache_id: id }
+        });
+
+        const notificationIds = notifications.map(n => n.id);
         await notification_utilisateur.destroy({
-            where: { notification_id: id }
+            where: {
+                notification_id: notificationIds
+            }
         });
 
         await notification.destroy({
@@ -290,21 +342,23 @@ const deleteTask = async (req, res) => {
         });
 
         await tache_projet.destroy({
-            where:{ tache_id: id }
+            where: { tache_id: id }
         });
 
         await tache_utilisateur.destroy({
-            where: { tache_id : id }
+            where: { tache_id: id }
         });
 
         await task.destroy();
 
         res.status(200).json({ message: "Tâche supprimée avec succès." });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Erreur du serveur." });
     }
 };
+
 
 module.exports = {
     createTask,

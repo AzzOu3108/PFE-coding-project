@@ -19,7 +19,7 @@ const notification_utilisateur = sequelize.define('notification_utilisateur',{
         },
 },{
     tableName: 'notification_utilisateur',
-    timestamps: false
+    timestamps: false,
 });
 
 module.exports = notification_utilisateur

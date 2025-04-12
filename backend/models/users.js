@@ -9,7 +9,7 @@ const utilisateur = sequelize.define('utilisateur', {
         unique: true
     },
     matricule: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING(11),
         allowNull: false,
         unique: true
     },
